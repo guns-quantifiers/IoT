@@ -5,13 +5,8 @@ namespace BlackjackAPI.Models
 {
     public class Game
     {
-        public Game()
-        {
-            Id = new Guid();
-        }
-
-        public Guid Id { get; set; }
-        public List<Deal> History { get; set; }
+        public Guid Id { get; set; } = Guid.NewGuid();
+        public List<Deal> History { get; set; } = new List<Deal>();
         public Strategy CurrentStrategy => Strategy.Draw; //TODO: implement
     }
 }

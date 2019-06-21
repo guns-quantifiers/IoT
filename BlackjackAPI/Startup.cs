@@ -69,12 +69,15 @@ namespace BlackjackAPI
                     PlayerHand = new Hand(){CardType.Two, CardType.Six}
                 }
             };
+            var game = new Game()
+            {
+                Id = new Guid(),
+                History = startDeals
+            };
             context.Games.Add(
-                new Game()
-                {
-                    Id = new Guid(),
-                    History = startDeals
-                });
+                game.Id,
+                game
+               );
         }
     }
 }

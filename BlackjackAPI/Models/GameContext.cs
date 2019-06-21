@@ -1,30 +1,19 @@
-﻿using Optional;
+﻿using System;
 using System.Collections.Generic;
 
 namespace BlackjackAPI.Models
 {
     public class GameContext
     {
-        public HashSet<Game> Games { get; set; } = new HashSet<Game>();
+        public Dictionary<Guid, Game> Games { get; set; } = new Dictionary<Guid, Game>();
 
-        public Option<Success, Error> Add(Game game)
+        public void Add(Game game)
         {
-            if (Games.Contains(game))
+            if (Games.ContainsKey(game.Id))
             {
-                return Option.None<Success, Error>(new Error("Game already added."));
+                throw new ApplicationException("Game already added.");
             }
-            Games.Add(game);
-            return Option.Some<Success, Error>(new Success("Game successfully added."));
-        }
-
-        public class Success
-        {
-            public Success(string message)
-            {
-                Message = message;
-            }
-
-            public string Message { get; }
+            Games.Add(game.Id, game);
         }
     }
 }

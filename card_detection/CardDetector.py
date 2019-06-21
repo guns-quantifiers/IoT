@@ -7,9 +7,9 @@ from Game import Game
 from ImageProvider import UrlImageProvider, DefaultImageProvider
 
 image_provider = None
-url = 'http://192.168.1.115:8080/shot.jpg'
-# image_provider = UrlImageProvider(url)
-image_provider = DefaultImageProvider('1.jpg')
+url = 'http://192.168.1.207:8080/shot.jpg'
+image_provider = UrlImageProvider(url)
+# image_provider = DefaultImageProvider('1.jpg')
 
 
 font = cv2.FONT_HERSHEY_SIMPLEX
@@ -29,7 +29,6 @@ while running:
     cnts = Cards.find_cards(pre_proc)
 
     cards = []
-
     if len(cnts) != 0:
 
         # Initialize a new "cards" list to assign the card objects.

@@ -95,7 +95,7 @@ def find_cards(thresh_image):
     dummy, cnts, hier = cv2.findContours(thresh_image, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
 
     if len(cnts) == 0:
-        return [], []
+        return []
 
     index_sort = sorted(range(len(cnts)), key=lambda i: cv2.contourArea(cnts[i]), reverse=True)
 
@@ -138,6 +138,7 @@ def preprocess_card(contour, image):
 
     # Find perimeter of card and use it to approximate corner points
     peri = cv2.arcLength(contour, True)
+
     approx = cv2.approxPolyDP(contour, 0.01 * peri, True)
     pts = np.float32(approx)
     q_card.corner_pts = pts
@@ -200,7 +201,6 @@ def match_card(q_card, train_ranks):
         # Difference the query card rank image from each of the train rank images,
         # and store the result with the least difference
         for Trank in train_ranks:
-
             diff_img = cv2.absdiff(q_card.rank_img, Trank.img)
             rank_diff = int(np.sum(diff_img) / 255)
 

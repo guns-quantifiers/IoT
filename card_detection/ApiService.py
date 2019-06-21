@@ -29,7 +29,7 @@ class ApiService:
             'croupierHand': croupier_hand
         })
         data = json.loads(res.text)
-        print(data["Message"])
+        print(data)
 
     def end_deal(self, deal_token):
         url = self.base_url + "/game/endDeal"

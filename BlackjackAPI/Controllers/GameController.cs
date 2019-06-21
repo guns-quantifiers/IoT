@@ -1,7 +1,6 @@
 ﻿using BlackjackAPI.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
-using Optional;
 using System;
 using System.Collections.Generic;
 
@@ -34,23 +33,52 @@ namespace BlackjackAPI.Controllers
         
         [HttpPost]
         [Route("create")]
-        public Option<GameContext.Success, Error> Post()
+        public IActionResult CreateGame()
         {
             _logger.LogInformation("New game creation POST accepted.");
             var newGame = new Game();
-            string r
-            GameContext.Add(newGame)
-                .Map(
-                    some: s =>  new
-                    {
-                        s.Message
-                    },
-                    e => return new
-                    {
-                        e.Message
-                    });
+            try
+            {
+                GameContext.Add(newGame);
+                return new OkObjectResult(new
+                {
+                    gameToken = newGame.Id
+                });
+            }
+            catch (Exception e)
+            {
+                _logger.LogWarning(e, $"Cannot create game: {e.Message}");
+                throw;
+            }
         }
-        
+
+        [HttpPost]
+        [Route("addDeal")]
+        public IActionResult AddDeal([FromBody] AddDealModel model)
+        {
+            var gameId = new Guid(model.GameToken);
+            if(GameContext.Games.TryGetValue(gameId, out Game game))
+            {
+                _logger.LogInformation($"New add deal POST accepted for game {model.GameToken}");
+                var deal = new Deal();
+                game.History.Add(deal);
+                return new OkObjectResult(new
+                {
+                    dealToken = deal.Id
+                });
+            }
+
+            return new NotFoundObjectResult(new
+            {
+                Message = $"Game with id {model.GameToken} not found."
+            });
+        }
+
+        public class AddDealModel
+        {
+            public string GameToken { get; set; }
+        }
+
         [HttpPut("{id}")]
         public void Put(int id, [FromBody] string value)
         {

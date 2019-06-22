@@ -1,5 +1,7 @@
 ﻿using BlackjackAPI.Exceptions;
 using BlackjackAPI.Models;
+using BlackjackAPI.Strategies;
+using BlackjackAPI.Strategies.BetStrategy;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using System;
@@ -12,15 +14,18 @@ namespace BlackjackAPI.Controllers
     [ApiController]
     public class DealController
     {
-        public DealController(GameContext gameContext, ILogger<DealController> logger)
+        public DealController(UstonSSGameContext gameContext, ILogger<DealController> logger, IStrategyProvider strategyProvider)
         {
             GameContext = gameContext ?? throw new ArgumentNullException(nameof(gameContext));
             _logger = logger;
+            _strategyProvider = strategyProvider;
         }
 
-        public GameContext GameContext { get; }
+        public UstonSSGameContext GameContext { get; }
         private readonly ILogger<DealController> _logger;
-        
+        private readonly IStrategyProvider _strategyProvider;
+        private readonly BetMultiplierCalculator _betMultiplierCalculator = new BetMultiplierCalculator();
+
         [HttpGet]
         [Route("strategy")]
         public IActionResult GetStrategy([FromQuery] string dealToken)
@@ -34,9 +39,11 @@ namespace BlackjackAPI.Controllers
                 throw new NotFoundException("Game for given token not found");
             }
 
+            var deal = game.History.Find(d => d.Id == dealId);
             return new OkObjectResult(new
             {
-                strategy = MockStrategy(game, dealId).ToString()
+                strategy = _strategyProvider.Get(game, deal).ToString(),
+                multiplier = _betMultiplierCalculator.Calculate(game, dealId)
             });
         }
 
@@ -52,15 +59,8 @@ namespace BlackjackAPI.Controllers
             {
                 throw new NotFoundException($"No game with deal with id {model?.DealToken}");
             }
-            var deal = game.History.First(d => d.Id == dealId);
 
-            if (deal.IsEnded)
-            {
-                throw new DealEndedException($"Cannot end already ended deal: {model?.DealToken}");
-            }
-
-            deal.IsEnded = true;
-
+            game.EndDeal(dealId);
             GameContext.Save();
 
             return new OkResult();
@@ -172,9 +172,9 @@ namespace BlackjackAPI.Controllers
             return false;
         }
 
-        private Strategy MockStrategy(Game game, Guid dealId)
+        private DrawStrategy MockStrategy(Game game, Guid dealId)
         {
-            return Strategy.Draw;
+            return DrawStrategy.Hit;
         }
     }
 }

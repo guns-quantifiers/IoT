@@ -1,6 +1,7 @@
 ﻿using AspNetCore.RouteAnalyzer;
 using BlackjackAPI.Models;
 using BlackjackAPI.Services;
+using BlackjackAPI.Strategies;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
@@ -24,8 +25,9 @@ namespace BlackjackAPI
 
             services.AddRouteAnalyzer();
 
-            services.AddSingleton<GameContext>();
-            services.AddSingleton<GameSaver>();
+            services.AddSingleton<IGameContext, UstonSSGameContext>();
+            services.AddSingleton<IGameSaver, GameSaver>();
+            services.AddSingleton<IStrategyProvider, ChartedBasicStrategy>();
         }
         
         public void Configure(IApplicationBuilder app, IHostingEnvironment env)
@@ -37,6 +39,9 @@ namespace BlackjackAPI
 
             app.UseMiddleware<RequestResponseLoggingMiddleware>();
             app.UseMiddleware<ErrorHandlingMiddleware>();
+
+            var gameContext = app.ApplicationServices.GetService<IGameContext>();
+            gameContext.Initialize();
 
             app.UseMvc(routes =>
             {

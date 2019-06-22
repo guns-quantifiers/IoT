@@ -7,7 +7,7 @@ using System.IO;
 
 namespace BlackjackAPI.Services
 {
-    public class GameSaver
+    public class GameSaver : IGameSaver
     {
         private readonly IConfiguration _configuration;
 

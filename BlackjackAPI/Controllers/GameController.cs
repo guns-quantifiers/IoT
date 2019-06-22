@@ -11,16 +11,17 @@ namespace BlackjackAPI.Controllers
     [ApiController]
     public class GameController
     {
-        public GameController(GameContext gameContext, ILogger<GameController> logger)
+        public GameController(UstonSSGameContext gameContext, ILogger<GameController> logger)
         {
             GameContext = gameContext ?? throw new ArgumentNullException(nameof(gameContext));
             _logger = logger;
         }
 
-        public GameContext GameContext { get; }
+        public UstonSSGameContext GameContext { get; }
         private readonly ILogger<GameController> _logger;
 
         [HttpGet]
+        [Route("")]
         public ActionResult<List<Game>> Get()
         {
             return GameContext.Games.Values.ToList();
@@ -31,10 +32,9 @@ namespace BlackjackAPI.Controllers
         public IActionResult CreateGame()
         {
           _logger.LogInformation("New game creation POST accepted.");
-            var newGame = new Game();
             try
             {
-                GameContext.Add(newGame);
+                var newGame = GameContext.NewGame();
                 return new OkObjectResult(new
                 {
                     gameToken = newGame.Id
@@ -55,8 +55,7 @@ namespace BlackjackAPI.Controllers
             if(GameContext.Games.TryGetValue(gameId, out Game game))
             {
                 _logger.LogInformation($"New add deal POST accepted for game {model.GameToken}");
-                var deal = new Deal();
-                game.History.Add(deal);
+                var deal = game.NewDeal();
                 return new OkObjectResult(new
                 {
                     dealToken = deal.Id

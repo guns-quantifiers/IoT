@@ -7,17 +7,19 @@ using System.Linq;
 
 namespace BlackjackAPI.Models
 {
-    public class GameContext
+    public class UstonSSGameContext : IGameContext
     {
-        private readonly GameSaver _saver;
-        private readonly ILogger<GameContext> _logger;
+        private readonly IGameSaver _saver;
+        private readonly ILogger<UstonSSGameContext> _logger;
+        private readonly int _deckAmount;
+        private readonly IDealCardCounter _cardCounter = new UstonSSCardCounter();
 
-        public GameContext(GameSaver saver, ILogger<GameContext> logger)
+        public UstonSSGameContext(IGameSaver saver,
+            ILogger<UstonSSGameContext> logger, int deckAmount = 2)
         {
             _saver = saver;
             _logger = logger;
-
-            Initialize();
+            _deckAmount = deckAmount;
         }
 
         private Dictionary<Guid, Game> _games = new Dictionary<Guid, Game>();
@@ -30,8 +32,22 @@ namespace BlackjackAPI.Models
             {
                 throw new DuplicateKeyException("Game already added.");
             }
+
+            game.CardCounter = -2 * _deckAmount;
             _games.Add(game.Id, game);
             _saver.SaveGames(_games.Values.ToList());
+        }
+
+        public Game NewGame()
+        {
+            Game game = new Game
+            {
+                CardCounter = -2 * _deckAmount,
+                DealCardCounter = _cardCounter
+            };
+            _games.Add(game.Id, game);
+            _saver.SaveGames(_games.Values.ToList());
+            return game;
         }
 
         public void Add(Guid gameId, Deal deal)
@@ -58,7 +74,7 @@ namespace BlackjackAPI.Models
             Save();
         }
 
-        private void Initialize()
+        public void Initialize(bool shouldUseTestData = true)
         {
             var savedGames = _saver.LoadGames();
             if (savedGames.Any())
@@ -73,9 +89,10 @@ namespace BlackjackAPI.Models
                     .ForEach(g =>
                     {
                         _games.Add(g.Id, g);
+
                     });
             }
-            else
+            else if(shouldUseTestData)
             {
                 AddTestData();
             }
@@ -83,28 +100,32 @@ namespace BlackjackAPI.Models
 
         private void AddTestData()
         {
-            var startDeals = new List<Deal>()
+            var startDeals = new List<Deal>
             {
                 new Deal()
                 {
                     Id = Guid.NewGuid(),
                     CroupierHand = new List<CardType>{CardType.Queen},
                     PlayerHand = new List<CardType>{CardType.Five, CardType.Jack},
-                    IsEnded = true,
                 },
                 new Deal()
                 {
                     Id = Guid.NewGuid(),
                     CroupierHand = new List<CardType>{CardType.Ace},
                     PlayerHand = new List<CardType>{CardType.Two, CardType.Six},
-                    IsEnded = true,
                 }
             };
             var game = new Game()
             {
                 Id = Guid.NewGuid(),
                 History = startDeals,
+                CardCounter = -2 * _deckAmount,
+                DealCardCounter = _cardCounter
             };
+            foreach (var deal in game.History)
+            {
+                game.EndDeal(deal.Id);
+            }
             _games.Add(
                 game.Id,
                 game

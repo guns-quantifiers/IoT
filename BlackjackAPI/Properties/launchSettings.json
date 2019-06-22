@@ -17,6 +17,15 @@
         "ASPNETCORE_ENVIRONMENT": "Development"
       }
     },
+    "BlackjackAPIVPN": {
+      "commandName": "Project",
+      "launchBrowser": true,
+      "launchUrl": "api/values",
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      },
+      "applicationUrl": "https://10.8.0.3:5001;http://10.8.0.3:5000"
+    },
     "BlackjackAPI": {
       "commandName": "Project",
       "launchBrowser": true,

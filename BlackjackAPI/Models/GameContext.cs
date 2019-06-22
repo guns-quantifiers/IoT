@@ -52,6 +52,12 @@ namespace BlackjackAPI.Models
             _saver.SaveGames(_games.Values.ToList());
         }
 
+        public void ClearAll()
+        {
+            _games = new Dictionary<Guid, Game>();
+            Save();
+        }
+
         private void Initialize()
         {
             var savedGames = _saver.LoadGames();
@@ -83,19 +89,21 @@ namespace BlackjackAPI.Models
                 {
                     Id = Guid.NewGuid(),
                     CroupierHand = new List<CardType>{CardType.Queen},
-                    PlayerHand = new List<CardType>{CardType.Five, CardType.Jack}
+                    PlayerHand = new List<CardType>{CardType.Five, CardType.Jack},
+                    IsEnded = true,
                 },
                 new Deal()
                 {
                     Id = Guid.NewGuid(),
                     CroupierHand = new List<CardType>{CardType.Ace},
-                    PlayerHand = new List<CardType>{CardType.Two, CardType.Six}
+                    PlayerHand = new List<CardType>{CardType.Two, CardType.Six},
+                    IsEnded = true,
                 }
             };
             var game = new Game()
             {
                 Id = Guid.NewGuid(),
-                History = startDeals
+                History = startDeals,
             };
             _games.Add(
                 game.Id,

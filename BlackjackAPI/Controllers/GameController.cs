@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace BlackjackAPI.Controllers
 {
@@ -20,22 +21,16 @@ namespace BlackjackAPI.Controllers
         private readonly ILogger<GameController> _logger;
 
         [HttpGet]
-        public ActionResult<IEnumerable<string>> Get()
+        public ActionResult<List<Game>> Get()
         {
-            return new string[] { "value1", "value2" };
-        }
-        
-        [HttpGet("{id}")]
-        public ActionResult<string> Get(int id)
-        {
-            return "value";
+            return GameContext.Games.Values.ToList();
         }
         
         [HttpPost]
         [Route("create")]
         public IActionResult CreateGame()
         {
-            _logger.LogInformation("New game creation POST accepted.");
+          _logger.LogInformation("New game creation POST accepted.");
             var newGame = new Game();
             try
             {
@@ -79,14 +74,12 @@ namespace BlackjackAPI.Controllers
             public string GameToken { get; set; }
         }
 
-        [HttpPut("{id}")]
-        public void Put(int id, [FromBody] string value)
+        [HttpDelete]
+        [Route("clearAll")]
+        public IActionResult ClearAll()
         {
-        }
-        
-        [HttpDelete("{id}")]
-        public void Delete(int id)
-        {
+            GameContext.ClearAll();
+            return new OkResult();
         }
     }
 }

@@ -40,11 +40,36 @@ namespace BlackjackAPI.Controllers
             });
         }
 
-        private Strategy MockStrategy(Game game, Guid dealId)
+        [HttpPost]
+        [Route("end")]
+        public IActionResult EndDeal([FromBody] EndDealModel model)
         {
-            return Strategy.Draw;
+            Guid dealId = new Guid(model.DealToken);
+            var game = GameContext.Games.Values
+                .ToList()
+                .Find(g => g.History.Exists(d => d.Id == dealId));
+            if (game == null)
+            {
+                throw new NotFoundException($"No game with deal with id {model?.DealToken}");
+            }
+            var deal = game.History.First(d => d.Id == dealId);
+
+            if (deal.IsEnded)
+            {
+                throw new DealEndedException($"Cannot end already ended deal: {model?.DealToken}");
+            }
+
+            deal.IsEnded = true;
+
+            GameContext.Save();
+
+            return new OkResult();
         }
 
+        public class EndDealModel
+        {
+            public string DealToken { get; set; }
+        }
 
         [HttpPost]
         [Route("update")]
@@ -59,6 +84,11 @@ namespace BlackjackAPI.Controllers
                 throw new NotFoundException($"No game with deal with {model?.DealToken}");
             }
             var deal = game.History.First(d => d.Id == dealId);
+
+            if (deal.IsEnded)
+            {
+                throw new DealEndedException($"Cannot update already ended deal: {model?.DealToken}");
+            }
 
             deal.PlayerHand = new List<CardType>(
                 model.PlayerHand.Select(s =>
@@ -93,53 +123,58 @@ namespace BlackjackAPI.Controllers
             public List<string> CroupierHand { get; set; }
         }
 
-        public bool ParseCardType(string s, out CardType card)
+        private bool ParseCardType(string s, out CardType card)
         {
             switch (s)
             {
-                case "2":
+                case "Two":
                     card = CardType.Two;
                     return true;
-                case "3":
-                    card = CardType.Two;
+                case "Three":
+                    card = CardType.Three;
                     return true;
-                case "4":
-                    card = CardType.Two;
+                case "Four":
+                    card = CardType.Four;
                     return true;
-                case "5":
-                    card = CardType.Two;
+                case "Five":
+                    card = CardType.Five;
                     return true;
-                case "6":
-                    card = CardType.Two;
+                case "Six":
+                    card = CardType.Six;
                     return true;
-                case "7":
-                    card = CardType.Two;
+                case "Seven":
+                    card = CardType.Seven;
                     return true;
-                case "8":
-                    card = CardType.Two;
+                case "Eight":
+                    card = CardType.Eight;
                     return true;
-                case "9":
-                    card = CardType.Two;
+                case "Nine":
+                    card = CardType.Nine;
                     return true;
-                case "10":
-                    card = CardType.Two;
+                case "Ten":
+                    card = CardType.Ten;
                     return true;
-                case "J":
-                    card = CardType.Two;
+                case "Jack":
+                    card = CardType.Jack;
                     return true;
-                case "Q":
-                    card = CardType.Two;
+                case "Queen":
+                    card = CardType.Queen;
                     return true;
-                case "K":
-                    card = CardType.Two;
+                case "King":
+                    card = CardType.King;
                     return true;
-                case "A":
-                    card = CardType.Two;
+                case "Ace":
+                    card = CardType.Ace;
                     return true;
             }
 
             card = CardType.None;
             return false;
+        }
+
+        private Strategy MockStrategy(Game game, Guid dealId)
+        {
+            return Strategy.Draw;
         }
     }
 }

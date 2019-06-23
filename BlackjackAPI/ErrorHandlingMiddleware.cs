@@ -44,6 +44,7 @@ namespace BlackjackAPI
                 case NotFoundException _:
                     code = HttpStatusCode.NotFound;
                     break;
+                case BlackjackBadRequestException _:
                 case BadHttpRequestException _:
                 case DuplicateKeyException _:
                 case DealEndedException _:

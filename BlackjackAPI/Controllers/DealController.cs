@@ -14,14 +14,14 @@ namespace BlackjackAPI.Controllers
     [ApiController]
     public class DealController
     {
-        public DealController(UstonSSGameContext gameContext, ILogger<DealController> logger, IStrategyProvider strategyProvider)
+        public DealController(IGameContext gameContext, ILogger<DealController> logger, IStrategyProvider strategyProvider)
         {
             GameContext = gameContext ?? throw new ArgumentNullException(nameof(gameContext));
             _logger = logger;
             _strategyProvider = strategyProvider;
         }
 
-        public UstonSSGameContext GameContext { get; }
+        public IGameContext GameContext { get; }
         private readonly ILogger<DealController> _logger;
         private readonly IStrategyProvider _strategyProvider;
         private readonly BetMultiplierCalculator _betMultiplierCalculator = new BetMultiplierCalculator();
@@ -30,20 +30,49 @@ namespace BlackjackAPI.Controllers
         [Route("strategy")]
         public IActionResult GetStrategy([FromQuery] string dealToken)
         {
-            Guid dealId = new Guid(dealToken);
-            var game = GameContext.Games.Values
-                .ToList()
-                .Find(g => g.History.Exists(d => d.Id == dealId));
-            if (game == null)
+            Guid dealId;
+            try
             {
-                throw new NotFoundException("Game for given token not found");
+                dealId = new Guid(dealToken);
+            }
+            catch (Exception e)
+            {
+                throw new BlackjackBadRequestException($"Could not create deal id from: {dealToken}", e);
             }
 
-            var deal = game.History.Find(d => d.Id == dealId);
+            Game game;
+            Deal deal;
+            try
+            {
+                game = GameContext.Games.Values
+                .ToList()
+                .Find(g => g.History.Exists(d => d.Id == dealId));
+                deal = game.History.Find(d => d.Id == dealId);
+            }
+            catch (Exception e)
+            {
+                throw new BlackjackBadRequestException($"Could not find deal for {dealToken}. ", e);
+            }
+
+            DrawStrategy strategy = DrawStrategy.None;
+            BetMultiplier multiplier;
+            try
+            {
+                strategy = _strategyProvider.Get(game, deal);
+                multiplier = _betMultiplierCalculator.Calculate(game, dealId);
+            }
+            catch (Exception e)
+            {
+                if (strategy != DrawStrategy.None)
+                {
+                    throw new StrategyException($"Could not get strategy multiplier for {dealToken}, although got strategy: {strategy}. Check logs for more information.", e);
+                }
+                throw new StrategyException($"Could not get strategy for {dealToken}. Check logs for more information.", e);
+            }
             return new OkObjectResult(new
             {
-                strategy = _strategyProvider.Get(game, deal).ToString(),
-                multiplier = _betMultiplierCalculator.Calculate(game, dealId)
+                Strategy = strategy.ToString(),
+                Multiplier = multiplier?.Value.ToString("F2")
             });
         }
 
@@ -63,7 +92,10 @@ namespace BlackjackAPI.Controllers
             game.EndDeal(dealId);
             GameContext.Save();
 
-            return new OkResult();
+            return new OkObjectResult(new
+            {
+                Message = "Ok"
+            });
         }
 
         public class EndDealModel

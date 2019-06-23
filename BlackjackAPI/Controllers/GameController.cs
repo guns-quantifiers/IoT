@@ -11,13 +11,13 @@ namespace BlackjackAPI.Controllers
     [ApiController]
     public class GameController
     {
-        public GameController(UstonSSGameContext gameContext, ILogger<GameController> logger)
+        public GameController(IGameContext gameContext, ILogger<GameController> logger)
         {
             GameContext = gameContext ?? throw new ArgumentNullException(nameof(gameContext));
             _logger = logger;
         }
 
-        public UstonSSGameContext GameContext { get; }
+        public IGameContext GameContext { get; }
         private readonly ILogger<GameController> _logger;
 
         [HttpGet]

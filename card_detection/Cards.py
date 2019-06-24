@@ -226,7 +226,7 @@ def draw_results(image, q_card):
 
     # Draw card name twice, so letters have black outline
     cv2.putText(image, rank_name, (x - 40, y - 10), font, 1, (0, 0, 0), 3, cv2.LINE_AA)
-    cv2.putText(image, rank_name, (x - 40, y - 10), font, 1, (50, 200, 200), 2, cv2.LINE_AA)
+    # cv2.putText(image, rank_name, (x - 40, y - 10), font, 1, (50, 200, 200), 2, cv2.LINE_AA)
 
     return image
 
@@ -303,13 +303,12 @@ def flattener(image, pts, w, h):
 def get_deal(cards, h_limit):
     player_hand = []
     croupier_hand = []
+    selected_cards = [card for card in cards if card.best_rank_match != "Unknown"]
 
-    for card in cards:
+    for card in selected_cards:
         if card.center[1] < h_limit:
             croupier_hand.append(card.best_rank_match)
         else:
             player_hand.append(card.best_rank_match)
 
-    print(f"Player hand: {player_hand}")
-    print(f"Croupier hand: {croupier_hand}")
     return player_hand, croupier_hand

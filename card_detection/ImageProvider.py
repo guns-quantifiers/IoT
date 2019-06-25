@@ -2,7 +2,7 @@ from urllib.request import urlopen
 import numpy as np
 import cv2
 
-CONNECTION_ERROR_MESSAGE = "Bad connection"
+CONNECTION_ERROR_MESSAGE = "bad connection"
 FONT = cv2.FONT_HERSHEY_SIMPLEX
 
 
@@ -21,7 +21,7 @@ class UrlImageProvider:
             text_size = cv2.getTextSize(CONNECTION_ERROR_MESSAGE, FONT, 1, 2)[0]
             text_x = (default_image.shape[1] - text_size[0]) // 2
             text_y = (default_image.shape[0] + text_size[1]) // 2
-            cv2.putText(default_image, CONNECTION_ERROR_MESSAGE, (text_x, text_y - 20), FONT, 1, (255, 255, 255), 2)
+            cv2.putText(default_image, CONNECTION_ERROR_MESSAGE, (text_x, text_y - 35), FONT, 1, (255, 255, 255), 1)
             return default_image
 
 

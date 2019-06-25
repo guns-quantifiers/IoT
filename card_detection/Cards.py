@@ -4,6 +4,22 @@ import cv2
 RANKS = ['Ace', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven',
          'Eight', 'Nine', 'Ten', 'Jack', 'Queen', 'King']
 
+RANKS_VALUE = {
+    'Two': 2,
+    'Three': 3,
+    'Four': 4,
+    'Five': 5,
+    'Six': 6,
+    'Seven': 7,
+    'Eight': 8,
+    'Nine': 9,
+    'Ten': 10,
+    'Jack': 10,
+    'Queen': 10,
+    'King': 10,
+    'Ace': 11,
+}
+
 # Adaptive threshold levels
 BKG_THRESH = 60
 CARD_THRESH = 30
@@ -106,7 +122,6 @@ def find_cards(thresh_image):
 
 
 def is_card(contour, hier):
-
     # Determine which of the contours are cards by applying the
     # following criteria:
     # 1) Have no parents,
@@ -225,7 +240,7 @@ def draw_results(image, q_card):
     rank_name = q_card.best_rank_match
 
     # Draw card name twice, so letters have black outline
-    cv2.putText(image, rank_name, (x - 40, y - 10), font, 1, (0, 0, 0), 3, cv2.LINE_AA)
+    cv2.putText(image, rank_name, (x - 40, y - 10), font, 1, (0, 255, 0), 2, cv2.LINE_AA)
     # cv2.putText(image, rank_name, (x - 40, y - 10), font, 1, (50, 200, 200), 2, cv2.LINE_AA)
 
     return image
@@ -312,3 +327,23 @@ def get_deal(cards, h_limit):
             player_hand.append(card.best_rank_match)
 
     return player_hand, croupier_hand
+
+
+def get_cards_value(cards):
+    value_sum = sum([RANKS_VALUE[card] for card in cards])
+    aces = cards.count('Ace')
+
+    while aces > 0 and value_sum > 21:
+        value_sum -= 10
+        aces -= 1
+
+    return value_sum
+
+
+def card_value_color(value_sum):
+    if value_sum > 21:
+        return 11, 8, 224
+    elif value_sum == 21:
+        return 0, 255, 0
+    else:
+        return 255, 255, 255

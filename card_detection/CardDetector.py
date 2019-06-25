@@ -26,16 +26,11 @@ if check.error is not None:
 else:
     game = Game(api)
 
+terminal_text = ""
 
 while running:
 
     image = image_provider.get_image()
-
-    # draw horizontal line to make the difference between croupier's and player's cards more distinct
-    img_h, img_w = np.shape(image)[:2]
-    mid_h = int(img_h / 2)
-    cv2.line(image, (0, mid_h), (img_w, mid_h), (255, 228, 181), 5)
-
     pre_proc = Cards.preprocess_image(image)
     cnts = Cards.find_cards(pre_proc)
     cards = []
@@ -50,25 +45,56 @@ while running:
         boxes = [card.contour for card in cards]
         cv2.drawContours(image, boxes, -1, (255, 0, 0), 2)
 
-    cv2.imshow('Visualization', image)
+    # draw horizontal line to make the difference between croupier's and player's cards more distinct
+    img_h, img_w = np.shape(image)[:2]
+    mid_h = int(img_h / 2)
+    cv2.line(image, (0, mid_h), (img_w, mid_h), (255, 255, 255), 1)
+
+    player_hand, croupier_hand = Cards.get_deal(cards, mid_h)
+    players = Cards.get_cards_value(player_hand)
+    croupier = Cards.get_cards_value(croupier_hand)
+    cv2.putText(image,
+                f"croupier {croupier}", (0 + 10, mid_h - 25),
+                font,
+                1,
+                Cards.card_value_color(croupier),
+                1,
+                cv2.LINE_AA)
+    cv2.putText(image,
+                f"player {players}",
+                (0 + 10, mid_h + 40),
+                font,
+                1,
+                Cards.card_value_color(players),
+                1,
+                cv2.LINE_AA)
 
     key = cv2.waitKey(1) & 0xFF
     if key == ord("q"):
         running = False
     elif key == ord("s"):
         game = Game(api)
+        terminal_text = 'Started new game'
     elif key == ord("n"):
         game.add_new_deal()
+        terminal_text = 'Added new deal'
     elif key == ord("u"):
-        player_hand, croupier_hand = Cards.get_deal(cards, mid_h)
         game.update_current_deal(player_hand, croupier_hand)
+        terminal_text = 'Updated deal'
     elif key == ord("e"):
-        player_hand, croupier_hand = Cards.get_deal(cards, mid_h)
         game.update_current_deal(player_hand, croupier_hand)
         game.end_current_deal()
+        terminal_text = 'Updated and ended deal'
     elif key == ord("h"):
-        player_hand, croupier_hand = Cards.get_deal(cards, mid_h)
         game.update_current_deal(player_hand, croupier_hand)
-        game.get_strategy_for_current_deal()
+        res = game.get_strategy_for_current_deal()
+        if res is not None:
+            terminal_text = f"{res['strategy']} with multiplier {res['multiplier']}"
 
+    text_size = cv2.getTextSize(terminal_text, font, 1, 2)[0]
+    text_x = (img_w - text_size[0]) - 20
+    text_y = (img_h + text_size[1]) - 20
+    cv2.putText(image, terminal_text, (text_x, 35), font, 1, (255, 255, 255), 1)
+
+    cv2.imshow('Visualization', image)
 cv2.destroyAllWindows()

@@ -37,5 +37,7 @@ class Game:
         api_response = self.api_service.get_strategy(self.current_deal_token)
         if api_response.error is None:
             print(f"Successfully acquired strategy: ", api_response.response)
+            return api_response.response
         else:
             print(api_response.error)
+            return None

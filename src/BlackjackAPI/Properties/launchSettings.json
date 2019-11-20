@@ -26,6 +26,15 @@
       },
       "applicationUrl": "https://10.8.0.3:5001;http://10.8.0.3:5000"
     },
+    "BlackjackAPIDDNS": {
+      "commandName": "Project",
+      "launchBrowser": false,
+      "launchUrl": "api/values",
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      },
+      "applicationUrl": "https://localhost:32002;http://localhost:8080"
+    },
     "BlackjackAPI": {
       "commandName": "Project",
       "launchBrowser": false,

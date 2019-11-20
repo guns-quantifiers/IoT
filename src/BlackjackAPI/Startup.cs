@@ -27,8 +27,6 @@ namespace BlackjackAPI
         
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
-
             services.AddRouteAnalyzer();
             services.AddHealthChecks();
             services.AddSingleton<IGameContext, UstonSSGameContext>();
@@ -36,9 +34,9 @@ namespace BlackjackAPI
             services.AddSingleton<IStrategyProvider, ChartedBasicStrategy>();
         }
         
-        public void Configure(IApplicationBuilder app, IHostingEnvironment env)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
-            if (env.IsDevelopment())
+            if (env.EnvironmentName.Equals("Development", System.StringComparison.OrdinalIgnoreCase))
             {
                 app.UseDeveloperExceptionPage();
             }
@@ -54,10 +52,7 @@ namespace BlackjackAPI
             var gameContext = app.ApplicationServices.GetService<IGameContext>();
             gameContext.Initialize();
 
-            app.UseMvc(routes =>
-            {
-                routes.MapRouteAnalyzer("/routes"); 
-            });
+            app.UseRouting();
         }
 
         private static Task WriteResponse(HttpContext httpContext,

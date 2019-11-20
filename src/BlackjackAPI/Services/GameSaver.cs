@@ -31,7 +31,7 @@ namespace BlackjackAPI.Services
                 List<Game> games = JsonConvert.DeserializeObject<List<Game>>(File.ReadAllText(filePath));
                 return games ?? new List<Game>();
             }
-            catch (Exception e)
+            catch (Exception)
             {
                 return new List<Game>();
             }

@@ -22,7 +22,7 @@ namespace BlackjackAPI
             _logger = logger;
         }
 
-        public async Task Invoke(HttpContext context, IOptions<MvcJsonOptions> options)
+        public async Task Invoke(HttpContext context)
         {
             try
             {
@@ -30,11 +30,11 @@ namespace BlackjackAPI
             }
             catch (Exception ex)
             {
-                await HandleExceptionAsync(context, ex, _logger, options);
+                await HandleExceptionAsync(context, ex, _logger);
             }
         }
 
-        private static Task HandleExceptionAsync(HttpContext context, Exception ex, ILogger<ErrorHandlingMiddleware> logger, IOptions<MvcJsonOptions> options)
+        private static Task HandleExceptionAsync(HttpContext context, Exception ex, ILogger<ErrorHandlingMiddleware> logger)
         {
             logger.LogWarning(ex, ex.Message);
             var code = HttpStatusCode.InternalServerError; // 500 if unexpected
@@ -56,7 +56,7 @@ namespace BlackjackAPI
             {
                 type = ex.GetType().Name,
                 error = ex.Message
-            }, options.Value.SerializerSettings.Formatting);
+            }, new JsonSerializerSettings() { Formatting = Formatting.Indented});
             context.Response.ContentType = "application/json";
             context.Response.StatusCode = (int)code;
             return context.Response.WriteAsync(result);

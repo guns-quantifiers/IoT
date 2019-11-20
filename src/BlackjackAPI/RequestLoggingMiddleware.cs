@@ -1,10 +1,8 @@
 ﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Http.Internal;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Diagnostics;
 using System.IO;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace BlackjackAPI
@@ -22,32 +20,39 @@ namespace BlackjackAPI
 
         public async Task Invoke(HttpContext context)
         {
-            //First, get the incoming request
-            var request = await FormatRequest(context.Request);
-            Debug.WriteLine(request);
-            _logger.LogTrace(request);
-
-            //Copy a pointer to the original response body stream
             var originalBodyStream = context.Response.Body;
 
-            //Create a new memory stream...
-            using (var responseBody = new MemoryStream())
-            {
-                //...and use that for the temporary response body
-                context.Response.Body = responseBody;
+            using var copyOfBody = new MemoryStream();
+            context.Response.Body = copyOfBody;
+            await _next(context);
 
-                //Continue down the Middleware pipeline, eventually returning to this class
-                await _next(context);
+            //await context.Response.Body.CopyToAsync(copyOfBody);
+            //using var reader = new StreamReader(copyOfBody);
 
-                //Format the response from the server
-                var response = await FormatResponse(context.Response);
+            var response = await FormatResponse(context.Response);
+            Debug.WriteLine(response);
+            _logger.LogTrace(response);
 
-                //TODO: Save log to chosen datastore
-                _logger.LogTrace(response);
-                Debug.WriteLine(response);
-                //Copy the contents of the new memory stream (which contains the response) to the original stream, which is then returned to the client.
-                await responseBody.CopyToAsync(originalBodyStream);
-            }
+            copyOfBody.Seek(0, SeekOrigin.Begin);
+            await copyOfBody.CopyToAsync(originalBodyStream);
+            ////Copy a pointer to the original response body stream
+            //var originalBodyStream = context.Response.Body;
+
+            ////Create a new memory stream...
+            ////...and use that for the temporary response body
+            //context.Response.Body = responseBody;
+
+            ////Continue down the Middleware pipeline, eventually returning to this class
+            //await _next(context);
+
+            ////Format the response from the server
+            //var response = await FormatResponse(context.Response);
+
+            ////TODO: Save log to chosen datastore
+            //_logger.LogTrace(response);
+            //Debug.WriteLine(response);
+            ////Copy the contents of the new memory stream (which contains the response) to the original stream, which is then returned to the client.
+            //await responseBody.CopyToAsync(originalBodyStream);
         }
 
         //private async Task<string> FormatRequest(HttpRequest request)
@@ -72,19 +77,12 @@ namespace BlackjackAPI
         //    return $"{request.Scheme} {request.Host}{request.Path} {request.QueryString} {bodyAsText}";
         //}
 
-        private async Task<string> FormatRequest(HttpRequest request)
+        private async Task<string> FormatRequest(HttpRequest request, StreamReader requestBodyReader)
         {
-            request.EnableRewind();
+            var buffer = new char[Convert.ToInt32(request.ContentLength)];
+            await requestBodyReader.ReadAsync(buffer, 0, buffer.Length);
 
-            var buffer = new byte[Convert.ToInt32(request.ContentLength)];
-
-            await request.Body.ReadAsync(buffer, 0, buffer.Length).ConfigureAwait(false);
-
-            var bodyAsText = Encoding.UTF8.GetString(buffer);
-
-            request.Body.Position = 0;
-
-            return $"{Environment.NewLine}{request}{Environment.NewLine}{request.Scheme} {request.Host}{request.Path} {request.QueryString} {bodyAsText}{Environment.NewLine}{Environment.NewLine}";
+            return $"{Environment.NewLine}{request}{Environment.NewLine}{request.Scheme} {request.Host}{request.Path} {request.QueryString} {buffer}{Environment.NewLine}{Environment.NewLine}";
         }
 
         private async Task<string> FormatResponse(HttpResponse response)

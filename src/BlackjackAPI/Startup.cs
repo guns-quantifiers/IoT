@@ -27,7 +27,7 @@ namespace BlackjackAPI
         
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddRouteAnalyzer();
+            //services.AddRouteAnalyzer();
             services.AddHealthChecks();
             services.AddSingleton<IGameContext, UstonSSGameContext>();
             services.AddSingleton<IGameSaver, GameSaver>();

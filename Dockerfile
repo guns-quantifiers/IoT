@@ -4,9 +4,8 @@ EXPOSE 80
 EXPOSE 443
 
 FROM mcr.microsoft.com/dotnet/core/sdk:3.0 AS build
-WORKDIR /src
-COPY ["src/BlackjackAPI/BlackjackAPI.csproj", "BlackjackAPI/"]
-RUN dotnet restore "BlackjackAPI/BlackjackAPI.csproj"
+COPY ["src/BlackjackAPI/BlackjackAPI.csproj", "/src/BlackjackAPI/"]
+RUN dotnet restore "/src/BlackjackAPI/BlackjackAPI.csproj"
 COPY . .
 WORKDIR "/src/BlackjackAPI"
 RUN dotnet build "BlackjackAPI.csproj" -c Release -o /app

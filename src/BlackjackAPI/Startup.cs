@@ -29,7 +29,8 @@ namespace BlackjackAPI
         {
             //services.AddRouteAnalyzer();
             services.AddHealthChecks();
-            services.AddSingleton<IGameContext, UstonSSGameContext>();
+            services.AddControllers();
+            services.AddSingleton<IGameContext, UstonSSGameContext>(); 
             services.AddSingleton<IGameSaver, GameSaver>();
             services.AddSingleton<IStrategyProvider, ChartedBasicStrategy>();
         }
@@ -53,6 +54,11 @@ namespace BlackjackAPI
             gameContext.Initialize();
 
             app.UseRouting();
+
+            app.UseEndpoints(endpoints =>
+            {
+                endpoints.MapControllers();
+            });
         }
 
         private static Task WriteResponse(HttpContext httpContext,

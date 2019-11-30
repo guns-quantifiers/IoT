@@ -1,5 +1,7 @@
-﻿using Microsoft.AspNetCore.Hosting;
-using Microsoft.Extensions.Hosting;
+﻿using System;
+using Microsoft.AspNetCore;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using NLog.Web;
 
@@ -9,22 +11,29 @@ namespace BlackjackAPI
     {
         public static void Main(string[] args)
         {
-            CreateHostBuilder(args).Build().Run();
-        }
+            NLog.ILogger logger = null;
+            try
+            {
+                WebHost.CreateDefaultBuilder(args)
+                    .ConfigureLogging((context, logging) =>
+                    {
+                        logging.ClearProviders();
+                        logger = NLogBuilder.ConfigureNLog(context.Configuration.GetValue<string>("Logging:NlogConfiguration")).GetLogger(Startup.LoggerName);
+                    })
+                    .UseStartup<Startup>()
+                    .UseNLog()
+                    .Build()
+                    .Run();
+            }
+            catch (Exception ex)
+            {
+                logger?.Error("Program start error", ex);
+            }
+            finally
+            {
+                NLog.LogManager.Shutdown();
+            }
 
-        public static IHostBuilder CreateHostBuilder(string[] args) =>
-            Host.CreateDefaultBuilder(args)
-                .ConfigureWebHostDefaults(webBuilder =>
-                {
-                    webBuilder
-                        .UseKestrel()
-                        .UseStartup<Startup>()
-                        .ConfigureLogging(logging =>
-                        {
-                            logging.ClearProviders();
-                            logging.SetMinimumLevel(Microsoft.Extensions.Logging.LogLevel.Trace);
-                        })
-                        .UseNLog();
-                });
+        }
     }
 }

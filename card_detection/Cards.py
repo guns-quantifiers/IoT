@@ -108,7 +108,7 @@ def find_cards(thresh_image):
     Returns a list of card contours sorted
     from largest to smallest."""
 
-    dummy, cnts, hier = cv2.findContours(thresh_image, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+    cnts, hier = cv2.findContours(thresh_image, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
 
     if len(cnts) == 0:
         return []
@@ -186,7 +186,7 @@ def preprocess_card(contour, image):
     qrank = query_thresh[20:185, 0:128]
 
     # Find rank contour and bounding rectangle, isolate and find largest contour
-    dummy, qrank_cnts, hier = cv2.findContours(qrank, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+    qrank_cnts, hier = cv2.findContours(qrank, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
     qrank_cnts = sorted(qrank_cnts, key=cv2.contourArea, reverse=True)
 
     # Find bounding rectangle for largest contour, use it to resize query rank

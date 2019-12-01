@@ -3,28 +3,17 @@ import os
 import numpy as np
 import Cards
 import ServicesProvider
-from Game import Game
 from dotenv import load_dotenv
-
 
 font = cv2.FONT_HERSHEY_SIMPLEX
 
 load_dotenv()
-api = ServicesProvider.get_api_service()
 image_provider = ServicesProvider.get_image_provider()
 
 path = os.path.dirname(os.path.abspath(__file__))
 train_ranks = Cards.load_ranks(path + '/Card_Imgs/')
 
 running = True
-
-check = api.health_check()
-game = None
-if check.error is not None:
-    running = False
-    print(check.error)
-else:
-    game = Game(api)
 
 terminal_text = ""
 
@@ -72,24 +61,6 @@ while running:
     key = cv2.waitKey(1) & 0xFF
     if key == ord("q"):
         running = False
-    elif key == ord("s"):
-        game = Game(api)
-        terminal_text = 'Started new game'
-    elif key == ord("n"):
-        game.add_new_deal()
-        terminal_text = 'Added new deal'
-    elif key == ord("u"):
-        game.update_current_deal(player_hand, croupier_hand)
-        terminal_text = 'Updated deal'
-    elif key == ord("e"):
-        game.update_current_deal(player_hand, croupier_hand)
-        game.end_current_deal()
-        terminal_text = 'Updated and ended deal'
-    elif key == ord("h"):
-        game.update_current_deal(player_hand, croupier_hand)
-        res = game.get_strategy_for_current_deal()
-        if res is not None:
-            terminal_text = f"{res['strategy']} with multiplier {res['multiplier']}"
 
     text_size = cv2.getTextSize(terminal_text, font, 1, 2)[0]
     text_x = (img_w - text_size[0]) - 20

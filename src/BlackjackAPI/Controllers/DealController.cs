@@ -1,7 +1,7 @@
-﻿using BlackjackAPI.Exceptions;
-using BlackjackAPI.Models;
-using BlackjackAPI.Strategies;
-using BlackjackAPI.Strategies.BetStrategy;
+﻿using Core.Components;
+using Core.Constants;
+using Core.Exceptions;
+using Core.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using System;
@@ -14,17 +14,21 @@ namespace BlackjackAPI.Controllers
     [ApiController]
     public class DealController
     {
-        public DealController(IGameContext gameContext, ILogger<DealController> logger, IStrategyProvider strategyProvider)
+        public DealController(IGameContext gameContext,
+            ILogger<DealController> logger,
+            IStrategyProvider strategyProvider,
+            IBetMultiplierCalculator betMultiplierCalculator)
         {
             GameContext = gameContext ?? throw new ArgumentNullException(nameof(gameContext));
             _logger = logger;
             _strategyProvider = strategyProvider;
+            _betMultiplierCalculator = betMultiplierCalculator;
         }
 
         public IGameContext GameContext { get; }
         private readonly ILogger<DealController> _logger;
         private readonly IStrategyProvider _strategyProvider;
-        private readonly BetMultiplierCalculator _betMultiplierCalculator = new BetMultiplierCalculator();
+        private readonly IBetMultiplierCalculator _betMultiplierCalculator;
 
         [HttpGet]
         [Route("strategy")]
@@ -202,11 +206,6 @@ namespace BlackjackAPI.Controllers
 
             card = CardType.None;
             return false;
-        }
-
-        private DrawStrategy MockStrategy(Game game, Guid dealId)
-        {
-            return DrawStrategy.Hit;
         }
     }
 }

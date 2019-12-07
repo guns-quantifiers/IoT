@@ -1,4 +1,6 @@
 ﻿using BlackjackAPI.Models;
+using Core.Components;
+using Core.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using System;

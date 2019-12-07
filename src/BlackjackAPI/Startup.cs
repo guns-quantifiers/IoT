@@ -1,7 +1,4 @@
 ﻿using System;
-using BlackjackAPI.Models;
-using BlackjackAPI.Services;
-using BlackjackAPI.Strategies;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.Hosting;
@@ -14,6 +11,12 @@ using Newtonsoft.Json.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Hosting;
 using NLog.Web;
+using Core.Components;
+using BlackjackAPI.Services;
+using Strategies;
+using Strategies.GameContexts;
+using BlackjackAPI.Middleware;
+using Logging;
 
 namespace BlackjackAPI
 {
@@ -40,6 +43,7 @@ namespace BlackjackAPI
             services.AddHealthChecks();
             services.AddControllers();
             services.AddSingleton<IGameContext, UstonSSGameContext>(); 
+            services.AddSingleton<ILogger, Logger>();
             services.AddSingleton<IGameSaver, GameSaver>();
             services.AddSingleton<IStrategyProvider, ChartedBasicStrategy>();
         }
@@ -49,7 +53,7 @@ namespace BlackjackAPI
             NLog.ILogger logger,
             IHostApplicationLifetime applicationLifetime)
         {
-            if (env.EnvironmentName.Equals("Development", System.StringComparison.OrdinalIgnoreCase))
+            if (env.EnvironmentName.Equals("Development", StringComparison.OrdinalIgnoreCase))
             {
                 app.UseDeveloperExceptionPage();
             }
@@ -84,13 +88,7 @@ namespace BlackjackAPI
             httpContext.Response.ContentType = "application/json";
 
             var json = new JObject(
-                new JProperty("status", result.Status.ToString())
-                //new JProperty("results", new JObject(result.Entries.Select(pair =>
-                //    new JProperty(pair.Key, new JObject(
-                //        new JProperty("status", pair.Value.Status.ToString()),
-                //        new JProperty("description", pair.Value.Description),
-                //        new JProperty("data", new JObject(pair.Value.Data.Select(
-                //            p => new JProperty(p.Key, p.Value)))))))))
+                    new JProperty("status", result.Status.ToString())
                 );
             return httpContext.Response.WriteAsync(
                 json.ToString(Formatting.Indented));

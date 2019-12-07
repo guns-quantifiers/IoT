@@ -18,6 +18,13 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\Core\Core.csproj" />
+    <ProjectReference Include="..\..\FileSave\FileSave.csproj" />
+    <ProjectReference Include="..\..\Logging\Logging.csproj" />
+    <ProjectReference Include="..\..\Strategies\Strategies.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Content Update="nlog.config">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>

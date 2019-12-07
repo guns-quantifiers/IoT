@@ -1,11 +1,13 @@
 using System.Collections.Generic;
-using BlackjackAPI.Models;
-using BlackjackAPI.Services;
 using BlackjackAPI.Strategies.BetStrategy;
+using Core.Components;
+using Core.Constants;
+using Core.Models;
 using FluentAssertions;
 using Microsoft.Extensions.Logging;
 using Moq;
 using NUnit.Framework;
+using Strategies.GameContexts;
 
 namespace CardCountingTests
 {

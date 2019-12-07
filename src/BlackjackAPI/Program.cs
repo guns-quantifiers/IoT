@@ -27,7 +27,7 @@ namespace BlackjackAPI
             }
             catch (Exception ex)
             {
-                logger?.Error("Program start error", ex);
+                logger?.Error(ex, "Program start error");
             }
             finally
             {

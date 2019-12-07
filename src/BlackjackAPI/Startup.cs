@@ -17,6 +17,7 @@ using Strategies;
 using Strategies.GameContexts;
 using BlackjackAPI.Middleware;
 using Logging;
+using Core.Settings;
 
 namespace BlackjackAPI
 {
@@ -42,7 +43,8 @@ namespace BlackjackAPI
             services.AddSingleton<NLog.ILogger>(logger);
             services.AddHealthChecks();
             services.AddControllers();
-            services.AddSingleton<IGameContext, UstonSSGameContext>(); 
+            services.AddSingleton<IGameContext, UstonSSGameContext>();
+            services.Configure<PersistenceSettings>(Configuration.GetSection("PersistenceSettings"));
             services.AddSingleton<ILogger, Logger>();
             services.AddSingleton<IGameSaver, GameSaver>();
             services.AddSingleton<IStrategyProvider, ChartedBasicStrategy>();

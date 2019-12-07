@@ -1,6 +1,8 @@
 ﻿using Core.Components;
 using Core.Models;
+using Core.Settings;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
@@ -10,27 +12,20 @@ namespace BlackjackAPI.Services
 {
     public class GameSaver : IGameSaver
     {
-        private readonly IConfiguration _configuration;
+        private readonly IOptionsMonitor<PersistenceSettings> _persistenceSettingsOptions;
 
-        public GameSaver(IConfiguration configuration)
+        public GameSaver(IOptionsMonitor<PersistenceSettings> persistenceSettingsOptions)
         {
-            _configuration = configuration;
+            _persistenceSettingsOptions = persistenceSettingsOptions;
         }
 
-        public void SaveGames(List<Game> games)
-        {
-            var filePath = "";// _configuration.GetValue<string>("SaveFilePath");
-            //var filePath = _configuration.GetValue<string>("SaveFilePath");
-            File.WriteAllText(filePath, JsonConvert.SerializeObject(games, Formatting.Indented));
-        }
+        public void SaveGames(List<Game> games) => File.WriteAllText(_persistenceSettingsOptions.CurrentValue.FilePath, JsonConvert.SerializeObject(games, Formatting.Indented));
 
         public List<Game> LoadGames()
         {
-            var filePath = "";// _configuration.GetValue<string>("SaveFilePath");
-            
             try
             {
-                List<Game> games = JsonConvert.DeserializeObject<List<Game>>(File.ReadAllText(filePath));
+                List<Game> games = JsonConvert.DeserializeObject<List<Game>>(File.ReadAllText(_persistenceSettingsOptions.CurrentValue.FilePath));
                 return games ?? new List<Game>();
             }
             catch (Exception)

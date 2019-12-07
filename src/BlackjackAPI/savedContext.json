@@ -1,26 +1,26 @@
 [
   {
-    "Id": "d74e9945-9e38-4282-8398-f4f7fcc1732c",
+    "Id": "4132fdfd-d42c-4d21-a262-83909a28c172",
     "History": [
       {
-        "Id": "8097e5c4-e387-4ccb-9635-86f0ae39dd7c",
+        "Id": "290c5e98-3753-4e3c-ba60-a13ea44d0827",
         "PlayerHand": [
-          "Five",
-          "Jack"
+          5,
+          11
         ],
         "CroupierHand": [
-          "Queen"
+          12
         ],
         "IsEnded": true
       },
       {
-        "Id": "dcd166ae-2bc8-48b3-925c-ca202c726961",
+        "Id": "283fd426-99f8-498a-b4b9-1405c2fab503",
         "PlayerHand": [
-          "Two",
-          "Six"
+          2,
+          6
         ],
         "CroupierHand": [
-          "Ace"
+          14
         ],
         "IsEnded": true
       }
@@ -29,104 +29,9 @@
     "DealCardCounter": {}
   },
   {
-    "Id": "1a2c169c-0386-446d-b67e-64b48b9f975e",
-    "History": [
-      {
-        "Id": "3149998e-ccc3-4442-92d6-8774bd98669e",
-        "PlayerHand": [],
-        "CroupierHand": [],
-        "IsEnded": false
-      }
-    ],
+    "Id": "44fba4ff-f053-4fd5-947a-61696bb96bc4",
+    "History": [],
     "CardCounter": -4,
-    "DealCardCounter": {}
-  },
-  {
-    "Id": "7b474558-8fe6-4b43-a6e9-9eb4e908c24c",
-    "History": [
-      {
-        "Id": "1b96ae0c-9f7c-42c9-b811-6477435b6d9e",
-        "PlayerHand": [
-          "Queen",
-          "Ten"
-        ],
-        "CroupierHand": [
-          "Eight",
-          "Nine"
-        ],
-        "IsEnded": true
-      },
-      {
-        "Id": "c462e793-d42c-4146-b6a5-ff5a9ceac8c2",
-        "PlayerHand": [
-          "Ten",
-          "Ace"
-        ],
-        "CroupierHand": [
-          "Eight"
-        ],
-        "IsEnded": true
-      },
-      {
-        "Id": "922a6be0-7590-4039-92f8-94a27149f166",
-        "PlayerHand": [
-          "Four",
-          "Three",
-          "Jack"
-        ],
-        "CroupierHand": [
-          "Ace",
-          "Seven"
-        ],
-        "IsEnded": true
-      },
-      {
-        "Id": "d462bceb-5c3e-4791-bd4d-4b5ebb1a3909",
-        "PlayerHand": [
-          "Seven",
-          "Three",
-          "Ten"
-        ],
-        "CroupierHand": [
-          "Six",
-          "Five",
-          "Seven"
-        ],
-        "IsEnded": true
-      },
-      {
-        "Id": "d5351f7b-2036-45a3-b15a-21b8a6cc7f4b",
-        "PlayerHand": [
-          "Queen",
-          "Jack"
-        ],
-        "CroupierHand": [
-          "Four"
-        ],
-        "IsEnded": false
-      }
-    ],
-    "CardCounter": -5,
-    "DealCardCounter": {}
-  },
-  {
-    "Id": "db76ff38-855e-44fe-8851-a492b7f34457",
-    "History": [
-      {
-        "Id": "af24b040-f760-4b92-9e84-4d0468a7abf8",
-        "PlayerHand": [
-          "Queen",
-          "Jack"
-        ],
-        "CroupierHand": [
-          "Three",
-          "Ace",
-          "Four"
-        ],
-        "IsEnded": true
-      }
-    ],
-    "CardCounter": -6,
     "DealCardCounter": {}
   }
 ]

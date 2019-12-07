@@ -19,13 +19,14 @@ namespace BlackjackAPI.Services
 
         public void SaveGames(List<Game> games)
         {
-            var filePath = _configuration.GetValue<string>("SaveFilePath");
+            var filePath = "";// _configuration.GetValue<string>("SaveFilePath");
+            //var filePath = _configuration.GetValue<string>("SaveFilePath");
             File.WriteAllText(filePath, JsonConvert.SerializeObject(games, Formatting.Indented));
         }
 
         public List<Game> LoadGames()
         {
-            var filePath = _configuration.GetValue<string>("SaveFilePath");
+            var filePath = "";// _configuration.GetValue<string>("SaveFilePath");
             
             try
             {

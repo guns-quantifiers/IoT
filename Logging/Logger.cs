@@ -1,8 +1,9 @@
-﻿using System;
+﻿using Core.Components;
+using System;
 
 namespace Logging
 {
-    public class Logger : Core.Components.ILogger
+    public class Logger : ILogger
     {
         private readonly NLog.ILogger _logger;
 

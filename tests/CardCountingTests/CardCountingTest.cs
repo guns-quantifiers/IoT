@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using BlackjackAPI.Strategies.BetStrategy;
 using Core.Components;
 using Core.Constants;
 using Core.Models;
@@ -7,6 +6,7 @@ using FluentAssertions;
 using Microsoft.Extensions.Logging;
 using Moq;
 using NUnit.Framework;
+using Strategies.BetStrategy;
 using Strategies.GameContexts;
 
 namespace CardCountingTests
@@ -16,8 +16,8 @@ namespace CardCountingTests
     {
         private IGameContext _gameContext;
         private Mock<IGameSaver> _gameSaverMock = new Mock<IGameSaver>();
-        private readonly Mock<ILogger<UstonSSGameContext>> _loggerMock = new Mock<ILogger<UstonSSGameContext>>();
-        private BetMultiplierCalculator _betMultiplierCalculator;
+        private readonly Mock<Core.Components.ILogger> _loggerMock = new Mock<Core.Components.ILogger>(MockBehavior.Loose);
+        private IBetMultiplierCalculator _betMultiplierCalculator;
 
         [SetUp]
         public void Init()

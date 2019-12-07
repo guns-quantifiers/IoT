@@ -3,10 +3,8 @@ using Core.Components;
 using Core.Constants;
 using Core.Models;
 using FluentAssertions;
-using Microsoft.Extensions.Logging;
 using Moq;
 using NUnit.Framework;
-using Strategies.BetStrategy;
 using Strategies.GameContexts;
 
 namespace CardCountingTests
@@ -16,15 +14,12 @@ namespace CardCountingTests
     {
         private IGameContext _gameContext;
         private Mock<IGameSaver> _gameSaverMock = new Mock<IGameSaver>();
-        private readonly Mock<Core.Components.ILogger> _loggerMock = new Mock<Core.Components.ILogger>(MockBehavior.Loose);
-        private IBetMultiplierCalculator _betMultiplierCalculator;
+        private readonly Mock<ILogger> _loggerMock = new Mock<ILogger>(MockBehavior.Loose);
 
         [SetUp]
         public void Init()
         {
-            _betMultiplierCalculator = new BetMultiplierCalculator();
             WithGameSaver();
-            WithLogger();
             _gameContext = new UstonSSGameContext(_gameSaverMock.Object, _loggerMock.Object, 3);
             _gameContext.Initialize();
         }
@@ -37,11 +32,6 @@ namespace CardCountingTests
                 {
 
                 });
-        }
-
-        private void WithLogger()
-        {
-            //_loggerMock.Setup(s => s.LogWarning(It.IsAny<string>()));
         }
 
         [Test]

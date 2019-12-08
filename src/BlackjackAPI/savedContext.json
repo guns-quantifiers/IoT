@@ -1,9 +1,9 @@
 [
   {
-    "Id": "4132fdfd-d42c-4d21-a262-83909a28c172",
+    "Id": "3f46142d-5abe-4504-9824-09a7fa42b42a",
     "History": [
       {
-        "Id": "290c5e98-3753-4e3c-ba60-a13ea44d0827",
+        "Id": "06bc1f10-ae07-499b-8f96-4673c880f8b4",
         "PlayerHand": [
           5,
           11
@@ -14,7 +14,7 @@
         "IsEnded": true
       },
       {
-        "Id": "283fd426-99f8-498a-b4b9-1405c2fab503",
+        "Id": "632d90b3-131b-471f-99da-708ffcaa9872",
         "PlayerHand": [
           2,
           6
@@ -29,7 +29,13 @@
     "DealCardCounter": {}
   },
   {
-    "Id": "44fba4ff-f053-4fd5-947a-61696bb96bc4",
+    "Id": "2c8f726a-5903-4344-831a-fc5b942e2cc6",
+    "History": [],
+    "CardCounter": -4,
+    "DealCardCounter": {}
+  },
+  {
+    "Id": "61fd5f04-e6bc-41b3-bcb6-10d410a33cb1",
     "History": [],
     "CardCounter": -4,
     "DealCardCounter": {}

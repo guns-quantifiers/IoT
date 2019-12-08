@@ -18,6 +18,7 @@ using Strategies.GameContexts;
 using BlackjackAPI.Middleware;
 using Logging;
 using Core.Settings;
+using Strategies.BetStrategy;
 
 namespace BlackjackAPI
 {
@@ -48,6 +49,7 @@ namespace BlackjackAPI
             services.AddSingleton<ILogger, Logger>();
             services.AddSingleton<IGameSaver, GameSaver>();
             services.AddSingleton<IStrategyProvider, ChartedBasicStrategy>();
+            services.AddSingleton<IBetMultiplierCalculator, BetMultiplierCalculator>();
         }
         
         public void Configure(IApplicationBuilder app,

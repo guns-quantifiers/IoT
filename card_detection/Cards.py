@@ -79,11 +79,14 @@ def load_ranks(filepath):
     return train_ranks
 
 
-def preprocess_image(image):
+def preprocess_image(image, params):
     """Returns a grayed, blurred, and adaptively thresholded camera image."""
 
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-    blur = cv2.GaussianBlur(gray, (5, 5), 0)
+    if params.yDeviation < 1:
+        blur = cv2.medianBlur(gray, params.xDeviation)
+    else:
+        blur = cv2.GaussianBlur(gray, (params.xDeviation, params.yDeviation), 0)
 
     # The best threshold level depends on the ambient lighting conditions.
     # For bright lighting, a high threshold must be used to isolate the cards
@@ -96,10 +99,10 @@ def preprocess_image(image):
     # than that. This allows the threshold to adapt to the lighting conditions.
     img_w, img_h = np.shape(image)[:2]
     bkg_level = gray[int(img_h / 100)][int(img_w / 2)]
-    thresh_level = bkg_level + BKG_THRESH
+    thresh_level = bkg_level + params.threshAdder
 
-    retval, thresh = cv2.threshold(blur, thresh_level, 255, cv2.THRESH_BINARY)
-
+    # ret2, thresh = cv2.threshold(blur, 0, 123, cv2.THRESH_BINARY+cv2.THRESH_OTSU)
+    thresh = cv2.adaptiveThreshold(blur, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 7, 3)
     return thresh
 
 
@@ -108,7 +111,7 @@ def find_cards(thresh_image, params, image):
     Returns a list of card contours sorted
     from largest to smallest."""
 
-    cnts, hier = cv2.findContours(thresh_image, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+    cnts, hier = cv2.findContours(thresh_image, cv2.RETR_TREE, cv2.CHAIN_APPROX_TC89_KCOS)
 
     if len(cnts) == 0:
         return []
@@ -129,15 +132,15 @@ def is_card(contour, hier, params, image):
     # 3) Bigger area than the minimum card size,
     # 4) Have four corners
 
-    if hier != -1:
-        return False
-    
+    # if hier != -1:
+    #     return False
+
     size = cv2.contourArea(contour)
-    if size > 100:
-        print(size)
+
     if (size > params.maxSize) or (size < params.minSize):
         return False
     peri = cv2.arcLength(contour, True)
+    # cv2.drawContours(image, [contour], 0, (0,255,0), 3)
     cv2.drawContours(image, [contour], 0, (0,255,0), 3)
     approx = cv2.approxPolyDP(contour, 0.01 * peri, True)
     

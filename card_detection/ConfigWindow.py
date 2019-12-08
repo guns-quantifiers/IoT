@@ -12,6 +12,9 @@ class ConfigWindow:
             [sg.Text('System parameters:')],
             [sg.Text('Card min size:', size=(15, 1)), sg.InputText(1000, key="minSize")],
             [sg.Text('Card max size', size=(15, 1)), sg.InputText(25000, key='maxSize')],
+            [sg.Text('X deviation', size=(15, 1)), sg.InputText(5, key='xDeviation')],
+            [sg.Text('Y deviation', size=(15, 1)), sg.InputText(5, key='yDeviation')],
+            [sg.Text('Threshold base', size=(15, 1)), sg.InputText(5, key='threshAdder')],
             [sg.Button('Update')]
         ]
         self.window = sg.Window('Config window', layout)
@@ -29,3 +32,6 @@ class ConfigWindow:
         print(values)
         self.params.minSize = float(values['minSize'])
         self.params.maxSize = float(values['maxSize'])
+        self.params.xDeviation = int(values['xDeviation'])
+        self.params.yDeviation = int(values['yDeviation'])
+        self.params.threshAdder = int(values['threshAdder'])

@@ -3,7 +3,10 @@ import os
 import numpy as np
 import Cards
 import ServicesProvider
+from ConfigWindow import ConfigWindow
+from SystemParameters import SystemParameters
 from dotenv import load_dotenv
+import _thread
 
 font = cv2.FONT_HERSHEY_SIMPLEX
 
@@ -16,13 +19,19 @@ train_ranks = Cards.load_ranks(path + '/Card_Imgs/')
 running = True
 
 terminal_text = ""
+params = SystemParameters()
+configWindow = ConfigWindow(params)
+print(_thread)
+_thread.start_new_thread(configWindow.run, ())
 
 while running:
 
     image = image_provider.get_image()
     pre_proc = Cards.preprocess_image(image)
-    cnts = Cards.find_cards(pre_proc)
+    
+    cnts = Cards.find_cards(pre_proc, params, image)
     cards = []
+    # cv2.drawContours(image, cnts, -1, (255, 0, 0), 2)
 
     if len(cnts) != 0:
 
@@ -32,7 +41,8 @@ while running:
             image = Cards.draw_results(image, cards[i])
 
         boxes = [card.contour for card in cards]
-        cv2.drawContours(image, boxes, -1, (255, 0, 0), 2)
+        
+        # cv2.drawContours(pre_proc, boxes, -1, (255, 0, 0), 2)
 
     # draw horizontal line to make the difference between croupier's and player's cards more distinct
     img_h, img_w = np.shape(image)[:2]
@@ -68,4 +78,5 @@ while running:
     cv2.putText(image, terminal_text, (text_x, 35), font, 1, (255, 255, 255), 1)
 
     cv2.imshow('Visualization', image)
+    # cv2.imshow("IMAGE", pre_proc)
 cv2.destroyAllWindows()

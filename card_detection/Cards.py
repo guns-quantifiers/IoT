@@ -103,7 +103,7 @@ def preprocess_image(image):
     return thresh
 
 
-def find_cards(thresh_image):
+def find_cards(thresh_image, params, image):
     """Finds all card-sized contours in a thresholded camera image.
     Returns a list of card contours sorted
     from largest to smallest."""
@@ -118,10 +118,10 @@ def find_cards(thresh_image):
     cnts_sort = [cnts[i] for i in index_sort]
     hier_sort = [hier[0][i] for i in index_sort]
 
-    return [contour for k, contour in enumerate(cnts_sort) if is_card(contour, hier_sort[k][3])]
+    return [contour for k, contour in enumerate(cnts_sort) if is_card(contour, hier_sort[k][3], params, image)]
 
 
-def is_card(contour, hier):
+def is_card(contour, hier, params, image):
     # Determine which of the contours are cards by applying the
     # following criteria:
     # 1) Have no parents,
@@ -131,13 +131,16 @@ def is_card(contour, hier):
 
     if hier != -1:
         return False
-
+    
     size = cv2.contourArea(contour)
-    if (size > CARD_MAX_AREA) or (size < CARD_MIN_AREA):
+    if size > 100:
+        print(size)
+    if (size > params.maxSize) or (size < params.minSize):
         return False
-
     peri = cv2.arcLength(contour, True)
+    cv2.drawContours(image, [contour], 0, (0,255,0), 3)
     approx = cv2.approxPolyDP(contour, 0.01 * peri, True)
+    
     if len(approx) != 4:
         return False
 

@@ -37,7 +37,7 @@ while running:
     if len(cnts) != 0:
 
         for i in range(len(cnts)):
-            cards.append(Cards.preprocess_card(cnts[i], image))
+            cards.append(Cards.preprocess_card(cnts[i], image, params))
             cards[i].best_rank_match, cards[i].rank_diff = Cards.match_card(cards[i], train_ranks)
             image = Cards.draw_results(image, cards[i])
 

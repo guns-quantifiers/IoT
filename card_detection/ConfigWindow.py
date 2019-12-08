@@ -15,6 +15,8 @@ class ConfigWindow:
             [sg.Text('X deviation', size=(15, 1)), sg.InputText(5, key='xDeviation')],
             [sg.Text('Y deviation', size=(15, 1)), sg.InputText(5, key='yDeviation')],
             [sg.Text('Threshold base', size=(15, 1)), sg.InputText(5, key='threshAdder')],
+            [sg.Text('CConstant', size=(15, 1)), sg.InputText(5, key='CConstant')],
+            [sg.Text('blockSize', size=(15, 1)), sg.InputText(5, key='blockSize')],
             [sg.Button('Update')]
         ]
         self.window = sg.Window('Config window', layout)
@@ -35,3 +37,5 @@ class ConfigWindow:
         self.params.xDeviation = int(values['xDeviation'])
         self.params.yDeviation = int(values['yDeviation'])
         self.params.threshAdder = int(values['threshAdder'])
+        self.params.CConstant = int(values['CConstant'])
+        self.params.blockSize = int(values['blockSize'])

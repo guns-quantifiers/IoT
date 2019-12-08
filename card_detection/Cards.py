@@ -32,7 +32,7 @@ CORNER_HEIGHT = 84
 RANK_WIDTH = 70
 RANK_HEIGHT = 125
 
-RANK_DIFF_MAX = 2000
+RANK_DIFF_MAX = 100
 
 CARD_MAX_AREA = 120000
 CARD_MIN_AREA = 25000
@@ -83,10 +83,10 @@ def preprocess_image(image, params):
     """Returns a grayed, blurred, and adaptively thresholded camera image."""
 
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-    if params.yDeviation < 1:
-        blur = cv2.medianBlur(gray, params.xDeviation)
-    else:
-        blur = cv2.GaussianBlur(gray, (params.xDeviation, params.yDeviation), 0)
+    # if params.yDeviation < 1:
+    #     blur = cv2.medianBlur(gray, params.xDeviation)
+    # else:
+    blur = cv2.GaussianBlur(gray, (params.xDeviation, params.yDeviation), 0)
 
     # The best threshold level depends on the ambient lighting conditions.
     # For bright lighting, a high threshold must be used to isolate the cards
@@ -101,10 +101,9 @@ def preprocess_image(image, params):
     bkg_level = gray[int(img_h / 100)][int(img_w / 2)]
     thresh_level = bkg_level + params.threshAdder
 
-    # ret2, thresh = cv2.threshold(blur, 0, 123, cv2.THRESH_BINARY+cv2.THRESH_OTSU)
-    thresh = cv2.adaptiveThreshold(blur, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 7, 3)
+    ret2, thresh = cv2.threshold(blur, thresh_level, 255, cv2.THRESH_BINARY)
+    # thresh_adaptive = cv2.adaptiveThreshold(blur, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 7, 3)
     return thresh
-
 
 def find_cards(thresh_image, params, image):
     """Finds all card-sized contours in a thresholded camera image.
@@ -132,8 +131,8 @@ def is_card(contour, hier, params, image):
     # 3) Bigger area than the minimum card size,
     # 4) Have four corners
 
-    # if hier != -1:
-    #     return False
+    if hier != -1:
+        return False
 
     size = cv2.contourArea(contour)
 
@@ -141,16 +140,16 @@ def is_card(contour, hier, params, image):
         return False
     peri = cv2.arcLength(contour, True)
     # cv2.drawContours(image, [contour], 0, (0,255,0), 3)
-    cv2.drawContours(image, [contour], 0, (0,255,0), 3)
     approx = cv2.approxPolyDP(contour, 0.01 * peri, True)
     
     if len(approx) != 4:
         return False
 
+    cv2.drawContours(image, [contour], 0, (0,255,0), 3)
     return True
 
 
-def preprocess_card(contour, image):
+def preprocess_card(contour, image, params):
     """Uses contour to find information about the query card.
        Isolates rank image from the card."""
 
@@ -186,7 +185,13 @@ def preprocess_card(contour, image):
     thresh_level = white_level - CARD_THRESH
     if thresh_level <= 0:
         thresh_level = 1
-    retval, query_thresh = cv2.threshold(qcorner_zoom, thresh_level, 255, cv2.THRESH_BINARY_INV)
+
+    # qGray = cv2.cvtColor(qcorner_zoom, cv2.COLOR_BGR2GRAY)
+    qBlur = cv2.GaussianBlur(qcorner_zoom, (params.xDeviation, params.yDeviation), 0)
+    query_thresh = cv2.adaptiveThreshold(qBlur, 255,
+        cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY_INV,
+        params.blockSize, params.CConstant)
+    cv2.imshow('query_thresh', query_thresh)
 
     # Get rank
     qrank = query_thresh[20:185, 0:128]
@@ -202,6 +207,7 @@ def preprocess_card(contour, image):
         qrank_roi = qrank[y1:y1 + h1, x1:x1 + w1]
         qrank_sized = cv2.resize(qrank_roi, (RANK_WIDTH, RANK_HEIGHT), 0, 0)
         q_card.rank_img = qrank_sized
+        
 
     return q_card
 
@@ -211,25 +217,40 @@ def match_card(q_card, train_ranks):
     the query card rank and suit images with the train rank and suit images.
     The best match is the rank or suit image that has the least difference."""
 
-    best_rank_match_diff = 10000
+    best_rank_match_diff = 10
     best_rank_match_name = "Unknown"
 
     # If no contours were found in query card in preprocess_card function,
     # the img size is zero, so skip the differencing process
     # (card will be left as Unknown)
     if len(q_card.rank_img) != 0:
-
+        print('Trying to match card')
         # Difference the query card rank image from each of the train rank images,
         # and store the result with the least difference
         for Trank in train_ranks:
-            diff_img = cv2.absdiff(q_card.rank_img, Trank.img)
-            rank_diff = int(np.sum(diff_img) / 255)
+            # diff_img = cv2.absdiff(q_card.rank_img, Trank.img)
+            diff_img = 0
+            print(len(Trank.img))
+            print('spacja')
+            print(len(q_card.rank_img))
+            x = 0
+            y = 0
+            for row in q_card.rank_img:
+                for point in row:
+                    if point == 1:
+                        if Trank.img[x][y] == 1:
+                            diff_img = diff_img + 1
+                    y = y + 1
+                x = x + 1
 
-            if rank_diff < best_rank_match_diff:
+            rank_diff = int(diff_img / 255)
+
+            print('rank_diff' + ' ' + str(rank_diff) + ' ' + 'rank' + ' ' + str(Trank.name))
+            if rank_diff > best_rank_match_diff:
                 best_rank_match_diff = rank_diff
                 best_rank_name = Trank.name
 
-    if best_rank_match_diff < RANK_DIFF_MAX:
+    if best_rank_match_diff > RANK_DIFF_MAX:
         best_rank_match_name = best_rank_name
 
     # Return the identity of the card and the quality of the suit and rank match

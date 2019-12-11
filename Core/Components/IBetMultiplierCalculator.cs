@@ -1,10 +1,9 @@
-﻿using System;
-using Core.Models;
+﻿using Core.Models;
 
 namespace Core.Components
 {
     public interface IBetMultiplierCalculator
     {
-        BetMultiplier Calculate(Game game, Guid dealId);
+        BetMultiplier Calculate(int counter);
     }
 }

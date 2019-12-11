@@ -6,7 +6,7 @@ namespace Core.Models
 {
     public class Deal
     {
-        public Guid Id { get; set; } = Guid.NewGuid();
+        public DealId Id { get; set; } = DealId.New();
         public Hand PlayerHand { get; set; } = new Hand(new List<CardType>());
         public Hand CroupierHand { get; set; } = new Hand(new List<CardType>());
         public bool IsEnded { get; set; } = false;
@@ -16,5 +16,16 @@ namespace Core.Models
             playerHand = PlayerHand.Cards;
             croupierHand = CroupierHand.Cards;
         }
+    }
+
+    public struct DealId
+    {
+        public DealId(Guid value) => Value = value;
+
+        public Guid Value { get; }
+
+        public static DealId New() => new DealId(Guid.NewGuid());
+        public static bool operator ==(DealId first, DealId second) => first.Value == second.Value;
+        public static bool operator !=(DealId first, DealId second) => first.Value != second.Value;
     }
 }

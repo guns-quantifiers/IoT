@@ -3,18 +3,18 @@ using Core.Components;
 using Core.Constants;
 using Core.Models;
 
-namespace Strategies.GameContexts
+namespace Strategies.StrategyContexts
 {
     public class UstonSSCardCounter : IDealCardCounter
     {
         public int Count(Deal deal)
         {
-            return deal.PlayerHand.Cards.Select(c => c.UstonCounter()).Sum()
-                   + deal.CroupierHand.Cards.Select(c => c.UstonCounter()).Sum();
+            return deal.PlayerHand.Cards.Sum(c => c.UstonCounter())
+                   + deal.CroupierHand.Cards.Sum(c => c.UstonCounter());
         }
     }
 
-    public static class UstonSSCardExtensions
+    internal static class UstonSSCardExtensions
     {
         public static int UstonCounter(this CardType card)
         {

@@ -1,32 +1,27 @@
-﻿using Core.Components;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using Core.Components;
 using Core.Constants;
 using Core.Exceptions;
 using Core.Models;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 
-namespace Strategies.GameContexts
+namespace BlackjackAPI.Services
 {
-    public class UstonSSGameContext : IGameContext
+    public class GamesRepository : IGamesRepository
     {
-        private readonly IGameSaver _saver;
+        private readonly IGameStorage _saver;
         private readonly ILogger _logger;
-        private readonly int _deckAmount;
-        private readonly IDealCardCounter _cardCounter = new UstonSSCardCounter();
 
-        public UstonSSGameContext(IGameSaver saver,
-            ILogger logger,
-            int deckAmount = 2)
+        public GamesRepository(IGameStorage saver, ILogger logger)
         {
             _saver = saver;
             _logger = logger;
-            _deckAmount = deckAmount;
         }
 
-        private Dictionary<Guid, Game> _games = new Dictionary<Guid, Game>();
+        private Dictionary<GameId, Game> _games = new Dictionary<GameId, Game>();
 
-        public IReadOnlyDictionary<Guid, Game> Games => _games;
+        public IReadOnlyDictionary<GameId, Game> Games => _games;
 
         public void Add(Game game)
         {
@@ -35,34 +30,16 @@ namespace Strategies.GameContexts
                 throw new DuplicateKeyException("Game already added.");
             }
 
-            game.CardCounter = -2 * _deckAmount;
             _games.Add(game.Id, game);
             _saver.SaveGames(_games.Values.ToList());
         }
 
         public Game NewGame()
         {
-            Game game = new Game
-            {
-                CardCounter = -2 * _deckAmount,
-                DealCardCounter = _cardCounter
-            };
+            Game game = new Game();
             _games.Add(game.Id, game);
             _saver.SaveGames(_games.Values.ToList());
             return game;
-        }
-
-        public void Add(Guid gameId, Deal deal)
-        {
-            if (_games.TryGetValue(gameId, out Game currentGame))
-            {
-                currentGame.History.Add(deal);
-                _saver.SaveGames(_games.Values.ToList());
-            }
-            else
-            {
-                throw new NotFoundException($"Game not found: {gameId}.");
-            }
         }
 
         public void Save()
@@ -72,7 +49,7 @@ namespace Strategies.GameContexts
 
         public void ClearAll()
         {
-            _games = new Dictionary<Guid, Game>();
+            _games = new Dictionary<GameId, Game>();
             Save();
         }
 
@@ -83,7 +60,7 @@ namespace Strategies.GameContexts
             {
                 if (savedGames.GroupBy(g => g.Id).Any(g => g.Count() > 1))
                 {
-                    _logger.Warning("Games read from file contained duplicated keys that were ignored.");
+                    _logger.Warning("Games read from storage contained duplicated keys that were ignored.");
                 }
                 savedGames.GroupBy(g => g.Id)
                     .Select(g => g.First())
@@ -104,25 +81,23 @@ namespace Strategies.GameContexts
         {
             var startDeals = new List<Deal>
             {
-                new Deal()
+                new Deal
                 {
-                    Id = Guid.NewGuid(),
+                    Id = DealId.New(),
                     CroupierHand = new Hand(new List<CardType>{CardType.Queen}),
                     PlayerHand = new Hand(new List<CardType>{CardType.Five, CardType.Jack}),
                 },
-                new Deal()
+                new Deal
                 {
-                    Id = Guid.NewGuid(),
+                    Id = DealId.New(),
                     CroupierHand = new Hand(new List<CardType>{CardType.Ace}),
                     PlayerHand = new Hand(new List<CardType>{CardType.Two, CardType.Six}),
                 }
             };
-            var game = new Game()
+            var game = new Game
             {
-                Id = Guid.NewGuid(),
+                Id = GameId.New(),
                 History = startDeals,
-                CardCounter = -2 * _deckAmount,
-                DealCardCounter = _cardCounter
             };
             foreach (var deal in game.History)
             {

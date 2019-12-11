@@ -3,7 +3,7 @@ using Core.Models;
 
 namespace Core.Components
 {
-    public interface IGameSaver
+    public interface IGameStorage
     {
         List<Game> LoadGames();
         void SaveGames(List<Game> games);

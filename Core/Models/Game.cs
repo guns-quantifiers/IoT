@@ -1,21 +1,14 @@
 ﻿using Core.Exceptions;
-using Core.Components;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Core.Models
 {
     public class Game
     {
-        public Guid Id { get; set; } = Guid.NewGuid();
+        public GameId Id { get; set; } = GameId.New();
         public List<Deal> History { get; set; } = new List<Deal>();
-        /// <summary>
-        /// Counter contains sum from all already ended deals.
-        /// Deals that are not ended, should be taken into account separately.
-        /// </summary>
-        public int CardCounter { get; set; } = -4;
-
-        public IDealCardCounter DealCardCounter { get; set; }
 
         public Deal NewDeal()
         {
@@ -24,15 +17,32 @@ namespace Core.Models
             return newDeal;
         }
 
-        public void EndDeal(Guid dealId)
+        public void EndDeal(DealId dealId)
         {
             var deal = History.Find(d => d.Id == dealId);
             if (deal.IsEnded)
             {
                 throw new DealEndedException($"Cannot end already ended deal: {dealId.ToString()}");
             }
-            CardCounter += DealCardCounter.Count(deal);
             deal.IsEnded = true;
         }
+
+        public bool TryGetDeal(DealId id, out Deal deal)
+        {
+            deal = History.SingleOrDefault(d => d.Id == id);
+            return deal != null;
+        }
+    }
+
+    public struct GameId
+    {
+        public GameId(Guid value) => Value = value;
+
+        public Guid Value { get; }
+
+        public static GameId New() => new GameId(Guid.NewGuid());
+
+        public static bool operator ==(GameId first, GameId second) => first.Value == second.Value;
+        public static bool operator !=(GameId first, GameId second) => first.Value != second.Value;
     }
 }

@@ -7,6 +7,7 @@ using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using BlackjackAPI.Services;
 
 namespace BlackjackAPI.Controllers
 {
@@ -14,36 +15,29 @@ namespace BlackjackAPI.Controllers
     [ApiController]
     public class DealController
     {
-        public DealController(IGameContext gameContext,
+        public DealController(IGamesRepository gameContext,
             ILogger<DealController> logger,
             IStrategyProvider strategyProvider,
-            IBetMultiplierCalculator betMultiplierCalculator)
+            IBetMultiplierCalculator betMultiplierCalculator, IStrategyContext strategyContext)
         {
             GameContext = gameContext ?? throw new ArgumentNullException(nameof(gameContext));
             _logger = logger;
             _strategyProvider = strategyProvider;
             _betMultiplierCalculator = betMultiplierCalculator;
+            _strategyContext = strategyContext;
         }
 
-        public IGameContext GameContext { get; }
+        public IGamesRepository GameContext { get; }
         private readonly ILogger<DealController> _logger;
         private readonly IStrategyProvider _strategyProvider;
+        private readonly IStrategyContext _strategyContext;
         private readonly IBetMultiplierCalculator _betMultiplierCalculator;
 
         [HttpGet]
         [Route("strategy")]
         public IActionResult GetStrategy([FromQuery] string dealToken)
         {
-            Guid dealId;
-            try
-            {
-                dealId = new Guid(dealToken);
-            }
-            catch (Exception e)
-            {
-                throw new BlackjackBadRequestException($"Could not create deal id from: {dealToken}", e);
-            }
-
+            DealId dealId = dealToken.ToDealId();
             Game game;
             Deal deal;
             try
@@ -63,7 +57,7 @@ namespace BlackjackAPI.Controllers
             try
             {
                 strategy = _strategyProvider.Get(game, deal);
-                multiplier = _betMultiplierCalculator.Calculate(game, dealId);
+                multiplier = _betMultiplierCalculator.Calculate(_strategyContext.GetCounter(game, deal));
             }
             catch (Exception e)
             {
@@ -84,7 +78,12 @@ namespace BlackjackAPI.Controllers
         [Route("end")]
         public IActionResult EndDeal([FromBody] EndDealModel model)
         {
-            Guid dealId = new Guid(model.DealToken);
+            if (model == null)
+            {
+                throw new BlackjackBadRequestException($"Could not parse request model on {nameof(EndDeal)} endpoint.");
+            }
+
+            DealId dealId = model.DealToken.ToDealId();
             var game = GameContext.Games.Values
                 .ToList()
                 .Find(g => g.History.Exists(d => d.Id == dealId));
@@ -111,7 +110,12 @@ namespace BlackjackAPI.Controllers
         [Route("update")]
         public IActionResult UpdateDeal([FromBody] UpdateDealModel model)
         {
-            Guid dealId = new Guid(model.DealToken);
+            if (model == null)
+            {
+                throw new BlackjackBadRequestException($"Could not parse request model on {nameof(UpdateDeal)} endpoint.");
+            }
+
+            DealId dealId = model.DealToken.ToDealId();
             var game = GameContext.Games.Values
                 .ToList()
                 .Find(g => g.History.Exists(d => d.Id == dealId));
@@ -126,26 +130,8 @@ namespace BlackjackAPI.Controllers
                 throw new DealEndedException($"Cannot update already ended deal: {model?.DealToken}");
             }
 
-            deal.PlayerHand.Cards = new List<CardType>(
-                model.PlayerHand.Select(s =>
-                {
-                    if (ParseCardType(s, out CardType card))
-                    {
-                        return card;
-                    }
-
-                    throw new ApplicationException($"Invalid card type: {s}");
-                }));
-            deal.CroupierHand.Cards = new List<CardType>(
-                model.CroupierHand.Select(s =>
-                {
-                    if (ParseCardType(s, out CardType card))
-                    {
-                        return card;
-                    }
-
-                    throw new ApplicationException($"Invalid card type: {s}");
-                }));
+            deal.PlayerHand.Cards = new List<CardType>(model.PlayerHand.Select(ParseCardType));
+            deal.CroupierHand.Cards = new List<CardType>(model.CroupierHand.Select(ParseCardType));
 
             GameContext.Save();
 
@@ -159,53 +145,13 @@ namespace BlackjackAPI.Controllers
             public List<string> CroupierHand { get; set; }
         }
 
-        private bool ParseCardType(string s, out CardType card)
+        private CardType ParseCardType(string cardString)
         {
-            switch (s)
+            if (Enum.TryParse(cardString, out CardType parsedCard))
             {
-                case "Two":
-                    card = CardType.Two;
-                    return true;
-                case "Three":
-                    card = CardType.Three;
-                    return true;
-                case "Four":
-                    card = CardType.Four;
-                    return true;
-                case "Five":
-                    card = CardType.Five;
-                    return true;
-                case "Six":
-                    card = CardType.Six;
-                    return true;
-                case "Seven":
-                    card = CardType.Seven;
-                    return true;
-                case "Eight":
-                    card = CardType.Eight;
-                    return true;
-                case "Nine":
-                    card = CardType.Nine;
-                    return true;
-                case "Ten":
-                    card = CardType.Ten;
-                    return true;
-                case "Jack":
-                    card = CardType.Jack;
-                    return true;
-                case "Queen":
-                    card = CardType.Queen;
-                    return true;
-                case "King":
-                    card = CardType.King;
-                    return true;
-                case "Ace":
-                    card = CardType.Ace;
-                    return true;
+                return parsedCard;
             }
-
-            card = CardType.None;
-            return false;
+            throw new ApplicationException($"Unknown card type: {cardString}");
         }
     }
 }

@@ -1,20 +1,19 @@
-﻿using Core.Components;
-using Core.Models;
-using Core.Settings;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Options;
-using Newtonsoft.Json;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using Core.Components;
+using Core.Models;
+using Core.Settings;
+using Microsoft.Extensions.Options;
+using Newtonsoft.Json;
 
-namespace BlackjackAPI.Services
+namespace FileSave
 {
-    public class GameSaver : IGameSaver
+    public class FileGameStorage : IGameStorage
     {
         private readonly IOptionsMonitor<PersistenceSettings> _persistenceSettingsOptions;
 
-        public GameSaver(IOptionsMonitor<PersistenceSettings> persistenceSettingsOptions)
+        public FileGameStorage(IOptionsMonitor<PersistenceSettings> persistenceSettingsOptions)
         {
             _persistenceSettingsOptions = persistenceSettingsOptions;
         }

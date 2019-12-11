@@ -12,14 +12,14 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Hosting;
 using NLog.Web;
 using Core.Components;
-using BlackjackAPI.Services;
 using Strategies;
-using Strategies.GameContexts;
 using BlackjackAPI.Middleware;
+using BlackjackAPI.Services;
 using Core.Exceptions;
 using Logging;
 using Core.Settings;
 using DbDataSource;
+using FileSave;
 using Microsoft.EntityFrameworkCore;
 using Strategies.BetStrategy;
 
@@ -47,9 +47,9 @@ namespace BlackjackAPI
             services.AddSingleton<NLog.ILogger>(logger);
             services.AddHealthChecks();
             services.AddControllers();
-            services.AddSingleton<IGameContext, UstonSSGameContext>();
+            services.AddSingleton<IGamesRepository, GamesRepository>();
             services.AddSingleton<ILogger, Logger>();
-            services.AddSingleton<IGameSaver, GameSaver>();
+            services.AddSingleton<IGameStorage, FileGameStorage>();
             services.AddSingleton<IStrategyProvider, ChartedBasicStrategy>();
             services.AddSingleton<IBetMultiplierCalculator, BetMultiplierCalculator>();
         }
@@ -72,7 +72,7 @@ namespace BlackjackAPI
                 ResponseWriter = WriteResponse
             });
 
-            var gameContext = app.ApplicationServices.GetService<IGameContext>();
+            var gameContext = app.ApplicationServices.GetService<IGamesRepository>();
             gameContext.Initialize();
 
             app.UseRouting();

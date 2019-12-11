@@ -5,6 +5,8 @@ using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using BlackjackAPI.Services;
+using Core.Exceptions;
 
 namespace BlackjackAPI.Controllers
 {
@@ -12,13 +14,13 @@ namespace BlackjackAPI.Controllers
     [ApiController]
     public class GameController
     {
-        public GameController(IGameContext gameContext, ILogger<GameController> logger)
+        public GameController(IGamesRepository gameContext, ILogger<GameController> logger)
         {
             GameContext = gameContext ?? throw new ArgumentNullException(nameof(gameContext));
             _logger = logger;
         }
 
-        public IGameContext GameContext { get; }
+        public IGamesRepository GameContext { get; }
         private readonly ILogger<GameController> _logger;
 
         [HttpGet]
@@ -52,8 +54,13 @@ namespace BlackjackAPI.Controllers
         [Route("addDeal")]
         public IActionResult AddDeal([FromBody] AddDealModel model)
         {
-            var gameId = new Guid(model.GameToken);
-            if(GameContext.Games.TryGetValue(gameId, out Game game))
+            if (model == null)
+            {
+                throw new BlackjackBadRequestException($"Could not parse request model on {nameof(AddDeal)} endpoint.");
+            }
+
+            var gameId = model.GameToken.ToGameId();
+            if (GameContext.Games.TryGetValue(gameId, out Game game))
             {
                 _logger.LogInformation($"New add deal POST accepted for game {model.GameToken}");
                 var deal = game.NewDeal();

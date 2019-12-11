@@ -16,8 +16,11 @@ using BlackjackAPI.Services;
 using Strategies;
 using Strategies.GameContexts;
 using BlackjackAPI.Middleware;
+using Core.Exceptions;
 using Logging;
 using Core.Settings;
+using DbDataSource;
+using Microsoft.EntityFrameworkCore;
 using Strategies.BetStrategy;
 
 namespace BlackjackAPI
@@ -45,7 +48,6 @@ namespace BlackjackAPI
             services.AddHealthChecks();
             services.AddControllers();
             services.AddSingleton<IGameContext, UstonSSGameContext>();
-            services.Configure<PersistenceSettings>(Configuration.GetSection("PersistenceSettings"));
             services.AddSingleton<ILogger, Logger>();
             services.AddSingleton<IGameSaver, GameSaver>();
             services.AddSingleton<IStrategyProvider, ChartedBasicStrategy>();
@@ -84,6 +86,19 @@ namespace BlackjackAPI
                 if(logger.IsInfoEnabled)
                     logger.Info($"{Environment.NewLine}Application started successfully!{Environment.NewLine}");
             });
+        }
+
+        private void RegisterPersistenceSettings(IServiceCollection services)
+        {
+            if (Configuration.GetSection("PersistenceSettings:ConnectionString").Exists())
+            {
+                services.AddDbContext<GameContext>(opts => opts.UseSqlServer(Configuration["PersistenceSettings:ConnectionString:GameDb"]));
+            }
+            else if (Configuration.GetSection("PersistenceSettings:FilePath").Exists())
+            {
+                services.Configure<PersistenceSettings>(Configuration.GetSection("PersistenceSettings"));
+            }
+            throw new ConfigurationException("Could not find any settings for saving games.");
         }
 
         private static Task WriteResponse(HttpContext httpContext,

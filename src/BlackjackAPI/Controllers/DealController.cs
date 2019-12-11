@@ -126,7 +126,7 @@ namespace BlackjackAPI.Controllers
                 throw new DealEndedException($"Cannot update already ended deal: {model?.DealToken}");
             }
 
-            deal.PlayerHand = new List<CardType>(
+            deal.PlayerHand.Cards = new List<CardType>(
                 model.PlayerHand.Select(s =>
                 {
                     if (ParseCardType(s, out CardType card))
@@ -136,7 +136,7 @@ namespace BlackjackAPI.Controllers
 
                     throw new ApplicationException($"Invalid card type: {s}");
                 }));
-            deal.CroupierHand = new List<CardType>(
+            deal.CroupierHand.Cards = new List<CardType>(
                 model.CroupierHand.Select(s =>
                 {
                     if (ParseCardType(s, out CardType card))

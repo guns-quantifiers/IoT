@@ -67,7 +67,7 @@ namespace CardCountingTests
         {
             var newGame = _gameContext.NewGame();
             var newDeal = newGame.NewDeal();
-            newDeal.PlayerHand = new List<CardType>() { card };
+            newDeal.PlayerHand.Cards = new List<CardType>() { card };
             ThenCounterIs(newGame, -6);
             ThenCounterIs(newGame, newDeal, -6 + cardModifier);
         }

@@ -1,16 +1,16 @@
-﻿using Core.Components;
+﻿using System.Linq;
+using Core.Components;
 using Core.Constants;
 using Core.Models;
-using System.Linq;
 
-namespace BlackjackAPI.Models
+namespace Strategies.GameContexts
 {
     public class UstonSSCardCounter : IDealCardCounter
     {
         public int Count(Deal deal)
         {
-            return deal.PlayerHand.Select(c => c.UstonCounter()).Sum()
-                   + deal.CroupierHand.Select(c => c.UstonCounter()).Sum();
+            return deal.PlayerHand.Cards.Select(c => c.UstonCounter()).Sum()
+                   + deal.CroupierHand.Cards.Select(c => c.UstonCounter()).Sum();
         }
     }
 

@@ -1,5 +1,4 @@
-﻿using BlackjackAPI.Models;
-using Core.Components;
+﻿using Core.Components;
 using Core.Constants;
 using Core.Exceptions;
 using Core.Models;
@@ -108,14 +107,14 @@ namespace Strategies.GameContexts
                 new Deal()
                 {
                     Id = Guid.NewGuid(),
-                    CroupierHand = new List<CardType>{CardType.Queen},
-                    PlayerHand = new List<CardType>{CardType.Five, CardType.Jack},
+                    CroupierHand = new Hand(new List<CardType>{CardType.Queen}),
+                    PlayerHand = new Hand(new List<CardType>{CardType.Five, CardType.Jack}),
                 },
                 new Deal()
                 {
                     Id = Guid.NewGuid(),
-                    CroupierHand = new List<CardType>{CardType.Ace},
-                    PlayerHand = new List<CardType>{CardType.Two, CardType.Six},
+                    CroupierHand = new Hand(new List<CardType>{CardType.Ace}),
+                    PlayerHand = new Hand(new List<CardType>{CardType.Two, CardType.Six}),
                 }
             };
             var game = new Game()

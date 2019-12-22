@@ -16,5 +16,10 @@ namespace Logging
         {
             _logger.Warn(message);
         }
+
+        public void Debug(string message)
+        {
+            _logger.Debug(message);
+        }
     }
 }

@@ -1,4 +1,10 @@
-﻿using System;
+﻿using BlackjackAPI.Middleware;
+using Core.Components;
+using Core.Exceptions;
+using Core.Settings;
+using DbDataSource;
+using FileSave;
+using Logging;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.Hosting;
@@ -6,22 +12,14 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
+using Microsoft.Extensions.Hosting;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using System.Threading.Tasks;
-using Microsoft.Extensions.Hosting;
 using NLog.Web;
-using Core.Components;
 using Strategies;
-using BlackjackAPI.Middleware;
-using BlackjackAPI.Services;
-using Core.Exceptions;
-using Logging;
-using Core.Settings;
-using DbDataSource;
-using FileSave;
-using Microsoft.EntityFrameworkCore;
 using Strategies.BetStrategy;
+using System;
+using System.Threading.Tasks;
 
 namespace BlackjackAPI
 {
@@ -35,7 +33,7 @@ namespace BlackjackAPI
         }
 
         public IConfiguration Configuration { get; }
-        
+
         public void ConfigureServices(IServiceCollection services)
         {
             //services.AddRouteAnalyzer();
@@ -52,8 +50,27 @@ namespace BlackjackAPI
             services.AddSingleton<IGameStorage, FileGameStorage>();
             services.AddSingleton<IStrategyProvider, ChartedBasicStrategy>();
             services.AddSingleton<IBetMultiplierCalculator, BetMultiplierCalculator>();
+            RegisterPersistenceSettings(services);
+
+            void RegisterPersistenceSettings(IServiceCollection services)
+            {
+                if (Configuration.GetSection("PersistenceSettings:DatabaseConnection").Exists())
+                {
+                    logger.Debug("Configuring connection to database.");
+                    services.Configure<DbPersistenceSettings>(Configuration.GetSection("PersistenceSettings:DatabaseConnection"));
+                }
+                else if (Configuration.GetSection("PersistenceSettings:FilePath").Exists())
+                {
+                    logger.Debug("Configuring local storage usage.");
+                    services.Configure<LocalPersistenceSettings>(Configuration.GetSection("PersistenceSettings"));
+                }
+                else
+                {
+                    throw new ConfigurationException("Could not find any settings for saving games.");
+                }
+            }
         }
-        
+
         public void Configure(IApplicationBuilder app,
             IWebHostEnvironment env,
             NLog.ILogger logger,
@@ -72,9 +89,6 @@ namespace BlackjackAPI
                 ResponseWriter = WriteResponse
             });
 
-            var gameContext = app.ApplicationServices.GetService<IGamesRepository>();
-            gameContext.Initialize();
-
             app.UseRouting();
 
             app.UseEndpoints(endpoints =>
@@ -83,23 +97,11 @@ namespace BlackjackAPI
             });
             applicationLifetime.ApplicationStarted.Register(() =>
             {
-                if(logger.IsInfoEnabled)
+                if (logger.IsInfoEnabled)
                     logger.Info($"{Environment.NewLine}Application started successfully!{Environment.NewLine}");
             });
         }
 
-        private void RegisterPersistenceSettings(IServiceCollection services)
-        {
-            if (Configuration.GetSection("PersistenceSettings:ConnectionString").Exists())
-            {
-                services.AddDbContext<GameContext>(opts => opts.UseSqlServer(Configuration["PersistenceSettings:ConnectionString:GameDb"]));
-            }
-            else if (Configuration.GetSection("PersistenceSettings:FilePath").Exists())
-            {
-                services.Configure<PersistenceSettings>(Configuration.GetSection("PersistenceSettings"));
-            }
-            throw new ConfigurationException("Could not find any settings for saving games.");
-        }
 
         private static Task WriteResponse(HttpContext httpContext,
             HealthReport result)

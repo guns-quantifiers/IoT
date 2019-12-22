@@ -1,12 +1,12 @@
-﻿using Core.Components;
+﻿using BlackjackAPI.Services;
+using Core.Components;
+using Core.Exceptions;
 using Core.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using BlackjackAPI.Services;
-using Core.Exceptions;
 
 namespace BlackjackAPI.Controllers
 {
@@ -29,18 +29,18 @@ namespace BlackjackAPI.Controllers
         {
             return GameContext.Games.Values.ToList();
         }
-        
+
         [HttpPost]
         [Route("create")]
         public IActionResult CreateGame()
         {
-          _logger.LogInformation("New game creation POST accepted.");
+            _logger.LogInformation("New game creation POST accepted.");
             try
             {
                 var newGame = GameContext.NewGame();
                 return new OkObjectResult(new
                 {
-                    gameToken = newGame.Id
+                    gameToken = newGame.Id.ToString()
                 });
             }
             catch (Exception e)

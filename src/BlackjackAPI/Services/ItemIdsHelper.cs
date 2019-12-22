@@ -1,19 +1,19 @@
-﻿using System;
-using Core.Exceptions;
+﻿using Core.Exceptions;
 using Core.Models;
+using MongoDB.Bson;
 
 namespace BlackjackAPI.Services
 {
     public static class ItemIdsHelper
     {
-        public static DealId ToDealId(this string value) => new DealId(ToGuid(value));
-        public static GameId ToGameId(this string value) => new GameId(ToGuid(value));
+        public static DealId ToDealId(this string value) => new DealId(ToObjectId(value));
+        public static GameId ToGameId(this string value) => new GameId(ToObjectId(value));
 
-        private static Guid ToGuid(this string value)
+        private static ObjectId ToObjectId(this string value)
         {
-            if (Guid.TryParse(value, out Guid guid))
+            if (ObjectId.TryParse(value, out ObjectId id))
             {
-                return guid;
+                return id;
             }
             else
             {

@@ -8,8 +8,7 @@ namespace Core.Components
         IReadOnlyDictionary<GameId, Game> Games { get; }
 
         Game NewGame();
-        void Initialize(bool shouldUseTestData = true);
+        void Update(Game game);
         void ClearAll();
-        void Save();
     }
 }

@@ -1,4 +1,5 @@
-﻿using Core.Components;
+﻿using BlackjackAPI.Services;
+using Core.Components;
 using Core.Constants;
 using Core.Exceptions;
 using Core.Models;
@@ -7,7 +8,6 @@ using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using BlackjackAPI.Services;
 
 namespace BlackjackAPI.Controllers
 {
@@ -93,7 +93,7 @@ namespace BlackjackAPI.Controllers
             }
 
             game.EndDeal(dealId);
-            GameContext.Save();
+            GameContext.Update(game);
 
             return new OkObjectResult(new
             {
@@ -133,8 +133,7 @@ namespace BlackjackAPI.Controllers
             deal.PlayerHand.Cards = new List<CardType>(model.PlayerHand.Select(ParseCardType));
             deal.CroupierHand.Cards = new List<CardType>(model.CroupierHand.Select(ParseCardType));
 
-            GameContext.Save();
-
+            GameContext.Update(game);
             return new OkResult();
         }
 

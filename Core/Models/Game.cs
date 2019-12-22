@@ -1,5 +1,6 @@
 ﻿using Core.Exceptions;
-using System;
+using MongoDB.Bson;
+using MongoDB.Bson.Serialization.Attributes;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -36,11 +37,14 @@ namespace Core.Models
 
     public struct GameId
     {
-        public GameId(Guid value) => Value = value;
+        public GameId(ObjectId value) => Value = value;
 
-        public Guid Value { get; }
+        [BsonRepresentation(BsonType.ObjectId)]
+        public ObjectId Value { get; }
 
-        public static GameId New() => new GameId(Guid.NewGuid());
+        public override string ToString() => Value.ToString();
+
+        public static GameId New() => new GameId(ObjectId.GenerateNewId());
 
         public static bool operator ==(GameId first, GameId second) => first.Value == second.Value;
         public static bool operator !=(GameId first, GameId second) => first.Value != second.Value;

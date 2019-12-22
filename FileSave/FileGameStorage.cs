@@ -1,19 +1,19 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using Core.Components;
+﻿using Core.Components;
 using Core.Models;
 using Core.Settings;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
+using System;
+using System.Collections.Generic;
+using System.IO;
 
 namespace FileSave
 {
     public class FileGameStorage : IGameStorage
     {
-        private readonly IOptionsMonitor<PersistenceSettings> _persistenceSettingsOptions;
+        private readonly IOptionsMonitor<LocalPersistenceSettings> _persistenceSettingsOptions;
 
-        public FileGameStorage(IOptionsMonitor<PersistenceSettings> persistenceSettingsOptions)
+        public FileGameStorage(IOptionsMonitor<LocalPersistenceSettings> persistenceSettingsOptions)
         {
             _persistenceSettingsOptions = persistenceSettingsOptions;
         }

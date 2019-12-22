@@ -16,18 +16,18 @@ namespace BlackjackAPI.Controllers
     {
         public GameController(IGamesRepository gameContext, ILogger<GameController> logger)
         {
-            GameContext = gameContext ?? throw new ArgumentNullException(nameof(gameContext));
+            _gameContext = gameContext ?? throw new ArgumentNullException(nameof(gameContext));
             _logger = logger;
         }
 
-        public IGamesRepository GameContext { get; }
+        private readonly IGamesRepository _gameContext;
         private readonly ILogger<GameController> _logger;
 
         [HttpGet]
         [Route("")]
         public ActionResult<List<Game>> Get()
         {
-            return GameContext.Games.Values.ToList();
+            return _gameContext.Games.Values.ToList();
         }
 
         [HttpPost]
@@ -37,7 +37,7 @@ namespace BlackjackAPI.Controllers
             _logger.LogInformation("New game creation POST accepted.");
             try
             {
-                var newGame = GameContext.NewGame();
+                var newGame = _gameContext.NewGame();
                 return new OkObjectResult(new
                 {
                     gameToken = newGame.Id.ToString()
@@ -59,14 +59,15 @@ namespace BlackjackAPI.Controllers
                 throw new BlackjackBadRequestException($"Could not parse request model on {nameof(AddDeal)} endpoint.");
             }
 
-            var gameId = model.GameToken.ToGameId();
-            if (GameContext.Games.TryGetValue(gameId, out Game game))
+            GameId gameId = model.GameToken.ToGameId();
+            if (_gameContext.Games.TryGetValue(gameId, out Game game))
             {
                 _logger.LogInformation($"New add deal POST accepted for game {model.GameToken}");
                 var deal = game.NewDeal();
+                _gameContext.Update(game);
                 return new OkObjectResult(new
                 {
-                    dealToken = deal.Id
+                    dealToken = deal.Id.ToString()
                 });
             }
 
@@ -85,7 +86,7 @@ namespace BlackjackAPI.Controllers
         [Route("clearAll")]
         public IActionResult ClearAll()
         {
-            GameContext.ClearAll();
+            _gameContext.ClearAll();
             return new OkResult();
         }
     }

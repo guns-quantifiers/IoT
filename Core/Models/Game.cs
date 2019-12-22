@@ -8,6 +8,7 @@ namespace Core.Models
 {
     public class Game
     {
+        [BsonId]
         public GameId Id { get; set; } = GameId.New();
         public List<Deal> History { get; set; } = new List<Deal>();
 
@@ -35,14 +36,33 @@ namespace Core.Models
         }
     }
 
-    public struct GameId
+    public class GameId
     {
         public GameId(ObjectId value) => Value = value;
+        public GameId() { }
 
         [BsonRepresentation(BsonType.ObjectId)]
-        public ObjectId Value { get; }
+        public ObjectId Value { get; set; }
 
         public override string ToString() => Value.ToString();
+
+        protected bool Equals(GameId other)
+        {
+            return Value.Equals(other.Value);
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            if (obj.GetType() != this.GetType()) return false;
+            return Equals((GameId)obj);
+        }
+
+        public override int GetHashCode()
+        {
+            return Value.GetHashCode();
+        }
 
         public static GameId New() => new GameId(ObjectId.GenerateNewId());
 

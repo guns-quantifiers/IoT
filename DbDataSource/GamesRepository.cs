@@ -84,7 +84,8 @@ namespace DbDataSource
 
         private async Task UpdateDocumentAsync(Game document)
         {
-            await _games.ReplaceOneAsync(x => x.Id == document.Id, document);
+            await _games.DeleteOneAsync(g => g.Id.Value == document.Id.Value);
+            await _games.InsertOneAsync(document);
         }
 
         private async Task<IEnumerable<Game>> GetAllAsync()

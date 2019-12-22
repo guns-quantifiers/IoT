@@ -13,11 +13,14 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Hosting;
+using MongoDB.Bson;
+using MongoDB.Bson.Serialization.Conventions;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using NLog.Web;
 using Strategies;
 using Strategies.BetStrategy;
+using Strategies.StrategyContexts;
 using System;
 using System.Threading.Tasks;
 
@@ -46,11 +49,13 @@ namespace BlackjackAPI
             services.AddHealthChecks();
             services.AddControllers();
             services.AddSingleton<IGamesRepository, GamesRepository>();
+            services.AddSingleton<IStrategyContext, UstonSSStrategyContext>();
             services.AddSingleton<ILogger, Logger>();
             services.AddSingleton<IGameStorage, FileGameStorage>();
             services.AddSingleton<IStrategyProvider, ChartedBasicStrategy>();
             services.AddSingleton<IBetMultiplierCalculator, BetMultiplierCalculator>();
             RegisterPersistenceSettings(services);
+            ConventionRegistry.Register("EnumStringConvention", new ConventionPack { new EnumRepresentationConvention(BsonType.String) }, t => true);
 
             void RegisterPersistenceSettings(IServiceCollection services)
             {

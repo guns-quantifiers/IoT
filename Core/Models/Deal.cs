@@ -18,11 +18,31 @@ namespace Core.Models
         }
     }
 
-    public struct DealId
+    public class DealId
     {
         public DealId(ObjectId value) => Value = value;
+        public DealId() { }
+        public ObjectId Value { get; set; }
 
-        public ObjectId Value { get; }
+        public override string ToString() => Value.ToString();
+
+        protected bool Equals(DealId other)
+        {
+            return Value.Equals(other.Value);
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            if (obj.GetType() != this.GetType()) return false;
+            return Equals((DealId)obj);
+        }
+
+        public override int GetHashCode()
+        {
+            return Value.GetHashCode();
+        }
 
         public static DealId New() => new DealId(ObjectId.GenerateNewId());
         public static bool operator ==(DealId first, DealId second) => first.Value == second.Value;

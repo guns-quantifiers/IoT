@@ -5,6 +5,7 @@
     <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
     <UserSecretsId>89d10365-220b-44d4-95a9-4c621cc91ffc</UserSecretsId>
     <LangVersion>8.0</LangVersion>
+    <Version>1.0.1</Version>
   </PropertyGroup>
   <ItemGroup>
     <Folder Include="wwwroot\" />

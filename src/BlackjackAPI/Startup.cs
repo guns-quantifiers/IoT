@@ -1,5 +1,4 @@
-﻿using System;
-using BlackjackAPI.Models;
+﻿using BlackjackAPI.Models;
 using BlackjackAPI.Services;
 using BlackjackAPI.Strategies;
 using Microsoft.AspNetCore.Builder;
@@ -9,17 +8,19 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
+using Microsoft.Extensions.Hosting;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using System.Threading.Tasks;
-using Microsoft.Extensions.Hosting;
 using NLog.Web;
+using System;
+using System.Threading.Tasks;
 
 namespace BlackjackAPI
 {
     public class Startup
     {
         internal const string LoggerName = "BerryjackLogger";
+        private const string AllCors = "All";
 
         public Startup(IConfiguration configuration)
         {
@@ -27,7 +28,7 @@ namespace BlackjackAPI
         }
 
         public IConfiguration Configuration { get; }
-        
+
         public void ConfigureServices(IServiceCollection services)
         {
             //services.AddRouteAnalyzer();
@@ -36,14 +37,25 @@ namespace BlackjackAPI
                     ConfigureNLog(Configuration.GetValue<string>("Logging:NlogConfiguration"))
                     .GetLogger(LoggerName);
 
+            services.AddCors(options =>
+            {
+                options.AddPolicy(AllCors,
+                    builder =>
+                    {
+                        builder.AllowAnyOrigin();
+                        builder.AllowAnyHeader();
+                        builder.AllowAnyMethod();
+                    });
+            });
+
             services.AddSingleton<NLog.ILogger>(logger);
             services.AddHealthChecks();
             services.AddControllers();
-            services.AddSingleton<IGameContext, UstonSSGameContext>(); 
+            services.AddSingleton<IGameContext, UstonSSGameContext>();
             services.AddSingleton<IGameSaver, GameSaver>();
             services.AddSingleton<IStrategyProvider, ChartedBasicStrategy>();
         }
-        
+
         public void Configure(IApplicationBuilder app,
             IWebHostEnvironment env,
             NLog.ILogger logger,
@@ -53,7 +65,6 @@ namespace BlackjackAPI
             {
                 app.UseDeveloperExceptionPage();
             }
-
             app.UseMiddleware<RequestResponseLoggingMiddleware>();
             app.UseMiddleware<ErrorHandlingMiddleware>();
 
@@ -66,6 +77,7 @@ namespace BlackjackAPI
             gameContext.Initialize();
 
             app.UseRouting();
+            app.UseCors(AllCors);
 
             app.UseEndpoints(endpoints =>
             {
@@ -73,7 +85,7 @@ namespace BlackjackAPI
             });
             applicationLifetime.ApplicationStarted.Register(() =>
             {
-                if(logger.IsInfoEnabled)
+                if (logger.IsInfoEnabled)
                     logger.Info($"{Environment.NewLine}Application started successfully!{Environment.NewLine}");
             });
         }

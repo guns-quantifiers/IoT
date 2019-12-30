@@ -1,4 +1,5 @@
-﻿using BlackjackAPI.Models;
+﻿using BlackjackAPI.Middleware;
+using BlackjackAPI.Models;
 using BlackjackAPI.Services;
 using BlackjackAPI.Strategies;
 using Microsoft.AspNetCore.Builder;
@@ -20,7 +21,6 @@ namespace BlackjackAPI
     public class Startup
     {
         internal const string LoggerName = "BerryjackLogger";
-        private const string AllCors = "All";
 
         public Startup(IConfiguration configuration)
         {
@@ -36,17 +36,6 @@ namespace BlackjackAPI
                 NLogBuilder.
                     ConfigureNLog(Configuration.GetValue<string>("Logging:NlogConfiguration"))
                     .GetLogger(LoggerName);
-
-            services.AddCors(options =>
-            {
-                options.AddPolicy(AllCors,
-                    builder =>
-                    {
-                        builder.AllowAnyOrigin();
-                        builder.AllowAnyHeader();
-                        builder.AllowAnyMethod();
-                    });
-            });
 
             services.AddSingleton<NLog.ILogger>(logger);
             services.AddHealthChecks();
@@ -77,7 +66,7 @@ namespace BlackjackAPI
             gameContext.Initialize();
 
             app.UseRouting();
-            app.UseCors(AllCors);
+            app.UseCorsMiddleware();
 
             app.UseEndpoints(endpoints =>
             {

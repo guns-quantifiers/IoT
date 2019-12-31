@@ -59,10 +59,14 @@ namespace BlackjackAPI
 
             void RegisterPersistenceSettings(IServiceCollection services)
             {
-                if (Configuration.GetSection("PersistenceSettings:DatabaseConnection").Exists())
+                if (Configuration.GetSection("PersistenceSettings:Database").Exists())
                 {
                     logger.Debug("Configuring connection to database.");
-                    services.Configure<DbPersistenceSettings>(Configuration.GetSection("PersistenceSettings:DatabaseConnection"));
+                    services.Configure<DbPersistenceSettings>(Configuration.GetSection("PersistenceSettings:Database"));
+                    services.PostConfigure<DbPersistenceSettings>(dbPersistenceSettings =>
+                    {
+                        dbPersistenceSettings.ConnectionString = Configuration.GetSection("MONGO_CONNECTION_STRING").Value;
+                    });
                 }
                 else if (Configuration.GetSection("PersistenceSettings:FilePath").Exists())
                 {

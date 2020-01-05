@@ -1,11 +1,10 @@
-using System.Collections.Generic;
 using Core.Components;
 using Core.Constants;
 using Core.Models;
 using FluentAssertions;
-using Moq;
 using NUnit.Framework;
 using Strategies.StrategyContexts;
+using System.Collections.Generic;
 
 namespace CardCountingTests
 {

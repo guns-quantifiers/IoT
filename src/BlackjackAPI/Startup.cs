@@ -39,7 +39,6 @@ namespace BlackjackAPI
 
         public void ConfigureServices(IServiceCollection services)
         {
-            //services.AddRouteAnalyzer();
             NLog.ILogger logger =
                 NLogBuilder.
                     ConfigureNLog(Configuration.GetValue<string>("Logging:NlogConfiguration"))

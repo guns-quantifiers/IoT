@@ -10,6 +10,7 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{DFFA74A7-B28E-43E8-B43C-8072237DB8E9}"
 	ProjectSection(SolutionItems) = preProject
 		.dockerignore = .dockerignore
+		.gitignore = .gitignore
 		Dockerfile = Dockerfile
 	EndProjectSection
 EndProject
@@ -23,7 +24,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Strategies", "Strategies\St
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Logging", "Logging\Logging.csproj", "{92B7060D-97E5-45F3-B85B-41A683254DA2}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DbDataSource", "DbDataSource\DbDataSource.csproj", "{89EAE83D-66F1-4DCC-9930-187BC0206065}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DbDataSource", "DbDataSource\DbDataSource.csproj", "{89EAE83D-66F1-4DCC-9930-187BC0206065}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

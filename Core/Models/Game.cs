@@ -34,6 +34,15 @@ namespace Core.Models
             deal = History.SingleOrDefault(d => d.Id == id);
             return deal != null;
         }
+
+        public Game Clone()
+        {
+            return new Game
+            {
+                Id = Id,
+                History = new List<Deal>(History.Select(d => d.Clone()))
+            };
+        }
     }
 
     public class GameId

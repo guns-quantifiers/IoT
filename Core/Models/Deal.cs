@@ -16,6 +16,17 @@ namespace Core.Models
             playerHand = PlayerHand.Cards;
             croupierHand = CroupierHand.Cards;
         }
+
+        public Deal Clone()
+        {
+            return new Deal
+            {
+                Id = Id,
+                PlayerHand = new Hand(new List<CardType>(PlayerHand.Cards)),
+                CroupierHand = new Hand(new List<CardType>(CroupierHand.Cards)),
+                IsEnded = IsEnded
+            };
+        }
     }
 
     public class DealId

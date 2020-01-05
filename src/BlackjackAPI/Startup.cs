@@ -1,5 +1,7 @@
-﻿using BlackjackAPI.Middleware;
+﻿using Autofac;
+using BlackjackAPI.Middleware;
 using Core.Components;
+using Core.Constants;
 using Core.Exceptions;
 using Core.Settings;
 using DbDataSource;
@@ -20,7 +22,9 @@ using Newtonsoft.Json.Linq;
 using NLog.Web;
 using Strategies;
 using Strategies.BetStrategy;
-using Strategies.StrategyContexts;
+using Strategies.StrategyContexts.Knockout;
+using Strategies.StrategyContexts.SilverFox;
+using Strategies.StrategyContexts.UstonSS;
 using System;
 using System.Threading.Tasks;
 
@@ -45,10 +49,10 @@ namespace BlackjackAPI
                     .GetLogger(LoggerName);
 
             services.AddSingleton<NLog.ILogger>(logger);
+            services.AddSingleton<IConfiguration>(Configuration);
             services.AddHealthChecks();
             services.AddControllers();
             services.AddSingleton<IGamesRepository, GamesRepository>();
-            services.AddSingleton<IStrategyContext, UstonSSStrategyContext>();
             services.AddSingleton<ILogger, Logger>();
             services.AddSingleton<IGameStorage, FileGameStorage>();
             services.AddSingleton<IStrategyProvider, ChartedBasicStrategy>();
@@ -77,6 +81,39 @@ namespace BlackjackAPI
                     throw new ConfigurationException("Could not find any settings for saving games.");
                 }
             }
+        }
+
+        //For Autofac
+        public void ConfigureContainer(ContainerBuilder builder)
+        {
+            builder.RegisterType<UstonSSStrategyContext>()
+                .Keyed<IStrategyContext>(CountingStrategy.UstonSS)
+                .SingleInstance();
+            builder.RegisterType<SilverFoxStrategyContext>()
+                .Keyed<IStrategyContext>(CountingStrategy.SilverFox)
+                .SingleInstance();
+            builder.RegisterType<KnockoutStrategyContext>()
+                .Keyed<IStrategyContext>(CountingStrategy.Knockout)
+                .SingleInstance();
+
+            builder.Register<IStrategyContext>(ctx =>
+            {
+                IConfiguration config = ctx.Resolve<IConfiguration>();
+                IConfigurationSection strategyConfig = config.GetSection("CountingStrategy");
+                if (strategyConfig.Exists())
+                {
+                    if (Enum.TryParse<CountingStrategy>(strategyConfig.Value,
+                        out CountingStrategy strategy))
+                    {
+                        return ctx.ResolveKeyed<IStrategyContext>(strategy);
+                    }
+
+                    throw new ConfigurationException("Unknown counting strategy type:" + strategyConfig.Value);
+                }
+
+                //fallback to UstonSS
+                return ctx.ResolveKeyed<IStrategyContext>(CountingStrategy.UstonSS);
+            }).InstancePerLifetimeScope();
         }
 
         public void Configure(IApplicationBuilder app,

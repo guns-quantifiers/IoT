@@ -1,22 +1,22 @@
-﻿using System.Linq;
-using Core.Components;
+﻿using Core.Components;
 using Core.Constants;
 using Core.Models;
+using System.Linq;
 
-namespace Strategies.StrategyContexts
+namespace Strategies.StrategyContexts.Knockout
 {
-    public class UstonSSCardCounter : IDealCardCounter
+    public class KnockoutCardCounter : IDealCardCounter
     {
         public int Count(Deal deal)
         {
-            return deal.PlayerHand.Cards.Sum(c => c.UstonCounter())
-                   + deal.CroupierHand.Cards.Sum(c => c.UstonCounter());
+            return deal.PlayerHand.Cards.Sum(c => c.KnockoutCounter())
+                   + deal.CroupierHand.Cards.Sum(c => c.KnockoutCounter());
         }
     }
 
-    internal static class UstonSSCardExtensions
+    internal static class KnockoutCardExtensions
     {
-        public static int UstonCounter(this CardType card)
+        public static int KnockoutCounter(this CardType card)
         {
             switch (card)
             {
@@ -24,21 +24,18 @@ namespace Strategies.StrategyContexts
                 case CardType.Four:
                 case CardType.Three:
                 case CardType.Six:
-                    return 2;
                 case CardType.Five:
-                    return 3;
                 case CardType.Seven:
                     return 1;
                 case CardType.Eight:
-                    return 0;
                 case CardType.Nine:
-                    return -1;
+                    return 0;
                 case CardType.Ten:
                 case CardType.Jack:
                 case CardType.Queen:
                 case CardType.King:
                 case CardType.Ace:
-                    return -2;
+                    return -1;
                 default:
                     return 0;
             }

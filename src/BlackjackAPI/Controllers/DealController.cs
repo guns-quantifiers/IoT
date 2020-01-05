@@ -18,7 +18,8 @@ namespace BlackjackAPI.Controllers
         public DealController(IGamesRepository gameContext,
             ILogger<DealController> logger,
             IStrategyProvider strategyProvider,
-            IBetMultiplierCalculator betMultiplierCalculator, IStrategyContext strategyContext)
+            IBetMultiplierCalculator betMultiplierCalculator,
+            IStrategyContext strategyContext)
         {
             GameContext = gameContext ?? throw new ArgumentNullException(nameof(gameContext));
             _logger = logger;

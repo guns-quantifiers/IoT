@@ -3,7 +3,7 @@ using Core.Constants;
 using Core.Models;
 using FluentAssertions;
 using NUnit.Framework;
-using Strategies.StrategyContexts;
+using Strategies.StrategyContexts.UstonSS;
 using System.Collections.Generic;
 
 namespace CardCountingTests

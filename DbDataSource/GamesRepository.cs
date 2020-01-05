@@ -95,7 +95,7 @@ namespace DbDataSource
 
         private IEnumerable<Game> GetAll()
         {
-            return (_games.Find(FilterDefinition<Game>.Empty)).ToEnumerable();
+            return (_games.Find(FilterDefinition<Game>.Empty)).ToList();
         }
 
         private async Task DeleteAsync(Game document)

@@ -1,8 +1,8 @@
-﻿using System.Linq;
-using Core.Components;
+﻿using Core.Components;
 using Core.Models;
+using System.Linq;
 
-namespace Strategies.StrategyContexts
+namespace Strategies.StrategyContexts.UstonSS
 {
     public class UstonSSStrategyContext : IStrategyContext
     {

@@ -5,6 +5,7 @@ using Core.Exceptions;
 using Core.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+using Strategies;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -18,21 +19,18 @@ namespace BlackjackAPI.Controllers
         public DealController(IGamesRepository gameContext,
             ILogger<DealController> logger,
             IStrategyProvider strategyProvider,
-            IBetMultiplierCalculator betMultiplierCalculator,
-            IStrategyContext strategyContext)
+            StrategiesResolver strategiesResolver)
         {
             GameContext = gameContext ?? throw new ArgumentNullException(nameof(gameContext));
             _logger = logger;
             _strategyProvider = strategyProvider;
-            _betMultiplierCalculator = betMultiplierCalculator;
-            _strategyContext = strategyContext;
+            _strategiesResolver = strategiesResolver;
         }
 
         public IGamesRepository GameContext { get; }
         private readonly ILogger<DealController> _logger;
         private readonly IStrategyProvider _strategyProvider;
-        private readonly IStrategyContext _strategyContext;
-        private readonly IBetMultiplierCalculator _betMultiplierCalculator;
+        private readonly StrategiesResolver _strategiesResolver;
 
         [HttpGet]
         [Route("strategy")]
@@ -54,11 +52,16 @@ namespace BlackjackAPI.Controllers
             }
 
             DrawStrategy strategy = DrawStrategy.None;
-            BetMultiplier multiplier;
             try
             {
                 strategy = _strategyProvider.Get(game, deal);
-                multiplier = _betMultiplierCalculator.Calculate(_strategyContext.GetCounter(game, deal));
+                StrategyInfo strategyInfo = _strategiesResolver.GetStrategy(game, deal);
+                return new OkObjectResult(new
+                {
+                    Strategy = strategy.ToString(),
+                    Counter = strategyInfo.Counter,
+                    Multiplier = strategyInfo.BetMultiplier?.Value.ToString("F2")
+                });
             }
             catch (Exception e)
             {
@@ -68,11 +71,6 @@ namespace BlackjackAPI.Controllers
                 }
                 throw new StrategyException($"Could not get strategy for {dealToken}. Check logs for more information.", e);
             }
-            return new OkObjectResult(new
-            {
-                Strategy = strategy.ToString(),
-                Multiplier = multiplier?.Value.ToString("F2")
-            });
         }
 
         [HttpPost]

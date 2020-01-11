@@ -2,34 +2,43 @@
 using Core.Constants;
 using Core.Models;
 using Strategies;
-using Strategies.BetStrategy;
 using Strategies.StrategyContexts.Knockout;
 using Strategies.StrategyContexts.SilverFox;
 using Strategies.StrategyContexts.UstonSS;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 
 namespace StrategyTests
 {
     public class TestCaseGenerator
     {
+        private readonly IBetMultiplierCalculator _betMultiplierCalculator;
+
+        public TestCaseGenerator(IBetMultiplierCalculator betMultiplierCalculator)
+        {
+            _betMultiplierCalculator = betMultiplierCalculator;
+        }
+
         public List<PlayerDecision> Generate(TestCaseSettings settings)
         {
             GameDeck deck = new GameDeck(settings.Decks, settings.MaxDeckPenetration);
             IStrategyContext countingStrategy = GetStrategyContext(settings);
-            IBetMultiplierCalculator betCalculator = new BetMultiplierCalculator();
             IStrategyProvider strategy = new ChartedBasicStrategy();
             List<PlayerDecision> decisions = new List<PlayerDecision>(settings.DecisionsAmount);
+
             Game currentGame = new Game();
+            int dealsCounter = -1;
             double currentBet;
+            int currentBetCounter;
             Deal currentDeal;
-            InitDeal();
-            for (int decisionNumber = 0; decisionNumber < settings.DecisionsAmount; decisionNumber++, ShuffleIfNecessary())
+            StartNewDeal();
+            for (int decisionNumber = 0; decisionNumber < settings.DecisionsAmount; decisionNumber++)
             {
                 double currentDecisionImpact = 0;
                 if (currentDeal.IsEnded)
                 {
-                    InitDeal();
+                    StartNewDeal();
                 }
 
                 DrawStrategy move = strategy.Get(currentGame, currentDeal);
@@ -67,11 +76,14 @@ namespace StrategyTests
                         throw new ArgumentException("Unknown move strategy: " + move);
                 }
 
-                decisions.Add(new PlayerDecision(move, currentDecisionImpact, currentGame.Clone()));
+                if (dealsCounter % 2 == 0) // count only half of the deals to simulate other players existence in the same game
+                {
+                    decisions.Add(new PlayerDecision(move, currentDecisionImpact, currentGame.Clone(), currentBetCounter));
+                }
 
                 void EndDeal()
                 {
-                    if (currentDeal.PlayerHand.Cards.Sum() > 21)
+                    if (currentDeal.PlayerHand.Cards.SafeSum() > 21)
                     {
                         currentDecisionImpact = -currentBet;
                     }
@@ -82,14 +94,14 @@ namespace StrategyTests
                             CroupierDraws();
                         }
 
-                        int croupierSum = currentDeal.CroupierHand.Cards.Sum();
+                        int croupierSum = currentDeal.CroupierHand.Cards.SafeSum();
                         if (croupierSum > 21)
                         {
                             currentDecisionImpact = currentBet;
                         }
                         else
                         {
-                            int playerSum = currentDeal.PlayerHand.Cards.Sum();
+                            int playerSum = currentDeal.PlayerHand.Cards.SafeSum();
                             if (croupierSum > playerSum)
                             {
                                 currentDecisionImpact = -currentBet;
@@ -111,23 +123,23 @@ namespace StrategyTests
 
             return decisions;
 
-            void InitDeal()
+            void StartNewDeal()
             {
+                if (deck.CheckShuffle())
+                {
+                    currentGame = new Game();
+                }
                 currentDeal = currentGame.NewDeal();
-                currentBet = settings.MinimumBet * betCalculator.Calculate(countingStrategy.GetCounter(currentGame, currentDeal)).Value;
+                Debug.WriteLine($"Started new deal ({dealsCounter}): " + currentDeal.Id.Value.Increment);
+                dealsCounter++;
+                currentBetCounter = countingStrategy.GetCounter(currentGame, currentDeal);
+                currentBet = settings.MinimumBet * _betMultiplierCalculator.Calculate(currentBetCounter).Value;
                 CroupierDraws();
                 PlayerDraws();
                 PlayerDraws();
             }
             void PlayerDraws() => currentDeal.PlayerHand.Cards.Add(deck.DrawNext());
             void CroupierDraws() => currentDeal.CroupierHand.Cards.Add(deck.DrawNext());
-            void ShuffleIfNecessary()
-            {
-                if (deck.CheckShuffle())
-                {
-                    currentGame = new Game();
-                }
-            }
         }
 
         private IStrategyContext GetStrategyContext(TestCaseSettings settings) =>
@@ -142,7 +154,7 @@ namespace StrategyTests
 
     public class TestCaseSettings
     {
-        public TestCaseSettings(int decisionsAmount, int decks, CountingStrategy countingStrategy, int minimumBet, float maxDeckPenetration)
+        public TestCaseSettings(int decisionsAmount, int decks, CountingStrategy countingStrategy, int minimumBet, double maxDeckPenetration)
         {
             DecisionsAmount = decisionsAmount;
             Decks = decks;
@@ -155,6 +167,6 @@ namespace StrategyTests
         public int Decks { get; }
         public CountingStrategy CountingStrategy { get; }
         public int MinimumBet { get; }
-        public float MaxDeckPenetration { get; }
+        public double MaxDeckPenetration { get; }
     }
 }

@@ -7,13 +7,14 @@ namespace StrategyTests
 {
     public class GameDeck
     {
+        private static readonly Random Random = new Random(0); // constant seed for the ease of debugging
         private readonly int _numberOfDecks;
-        private readonly float _penetrationRate;
+        private readonly double _penetrationRate;
 
         private Queue<CardType> _shuffledCards;
         private int _drawnCardsCounter = 0;
 
-        public GameDeck(int numberOfDecks, float penetrationRate)
+        public GameDeck(int numberOfDecks, double penetrationRate)
         {
             if (penetrationRate <= 0 || penetrationRate > 1)
             {
@@ -64,8 +65,7 @@ namespace StrategyTests
                 cards.Add(CardType.King);
                 cards.Add(CardType.Ace);
             }
-            Random random = new Random();
-            _shuffledCards = new Queue<CardType>(cards.OrderBy(c => random.Next()));
+            _shuffledCards = new Queue<CardType>(cards.OrderBy(c => Random.Next()));
             _drawnCardsCounter = 0;
         }
     }

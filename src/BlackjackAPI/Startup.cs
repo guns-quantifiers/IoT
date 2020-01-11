@@ -18,6 +18,7 @@ using Microsoft.Extensions.Hosting;
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Conventions;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Linq;
 using NLog.Web;
 using Strategies;
@@ -51,12 +52,15 @@ namespace BlackjackAPI
             services.AddSingleton<NLog.ILogger>(logger);
             services.AddSingleton<IConfiguration>(Configuration);
             services.AddHealthChecks();
-            services.AddControllers();
+            services.AddControllers()
+                .AddNewtonsoftJson(opts =>
+            {
+                opts.SerializerSettings.Converters.Add(new StringEnumConverter());
+            });
             services.AddSingleton<IGamesRepository, GamesRepository>();
             services.AddSingleton<ILogger, Logger>();
             services.AddSingleton<IGameStorage, FileGameStorage>();
             services.AddSingleton<IStrategyProvider, ChartedBasicStrategy>();
-            services.AddSingleton<IBetMultiplierCalculator, BetMultiplierCalculator>();
             RegisterPersistenceSettings(services);
             ConventionRegistry.Register("EnumStringConvention", new ConventionPack { new EnumRepresentationConvention(BsonType.String) }, t => true);
 
@@ -86,6 +90,11 @@ namespace BlackjackAPI
         //For Autofac
         public void ConfigureContainer(ContainerBuilder builder)
         {
+            builder.RegisterType<StrategiesResolver>()
+                .AsSelf()
+                .WithParameter(new TypedParameter(typeof(string), "Classic"))
+                .SingleInstance();
+
             builder.RegisterType<UstonSSStrategyContext>()
                 .Keyed<IStrategyContext>(CountingStrategy.UstonSS)
                 .SingleInstance();
@@ -94,6 +103,14 @@ namespace BlackjackAPI
                 .SingleInstance();
             builder.RegisterType<KnockoutStrategyContext>()
                 .Keyed<IStrategyContext>(CountingStrategy.Knockout)
+                .SingleInstance();
+
+            builder.Register<Func<CountingStrategy, IStrategyContext>>(ctx =>
+                {
+                    IComponentContext context = ctx.Resolve<IComponentContext>();
+                    return countingStrategy => context.ResolveKeyed<IStrategyContext>(countingStrategy);
+                })
+                .AsSelf()
                 .SingleInstance();
 
             builder.Register<IStrategyContext>(ctx =>
@@ -114,6 +131,37 @@ namespace BlackjackAPI
                 //fallback to UstonSS
                 return ctx.ResolveKeyed<IStrategyContext>(CountingStrategy.UstonSS);
             }).InstancePerLifetimeScope();
+
+            builder.Register<CountingStrategy>(ctx =>
+            {
+                IConfigurationSection strategyConfig = ctx.Resolve<IConfiguration>().GetSection("CountingStrategy");
+                if (strategyConfig.Exists())
+                {
+                    if (Enum.TryParse<CountingStrategy>(strategyConfig.Value,
+                        out CountingStrategy strategy))
+                    {
+                        return strategy;
+                    }
+
+                    throw new ConfigurationException("Unknown counting strategy type:" + strategyConfig.Value);
+                }
+
+                throw new ConfigurationException("Could not find default counting strategy in configuration.");
+            }).InstancePerLifetimeScope();
+
+            builder.RegisterType<BetMultiplierCalculator>()
+                .Keyed<IBetMultiplierCalculator>("Classic")
+                .SingleInstance();
+            builder.RegisterType<UnipolarSigmoidalBetCalculator>()
+                .Keyed<IBetMultiplierCalculator>("UnipolarSigmoidal")
+                .SingleInstance();
+            builder.Register<Func<string, IBetMultiplierCalculator>>(ctx =>
+                {
+                    IComponentContext context = ctx.Resolve<IComponentContext>();
+                    return function => context.ResolveKeyed<IBetMultiplierCalculator>(function);
+                })
+                .AsSelf()
+                .SingleInstance();
         }
 
         public void Configure(IApplicationBuilder app,

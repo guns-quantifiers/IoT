@@ -1,61 +1,39 @@
-using System.Collections.Generic;
-using BlackjackAPI.Models;
-using BlackjackAPI.Services;
-using BlackjackAPI.Strategies.BetStrategy;
+using Core.Components;
+using Core.Constants;
+using Core.Models;
 using FluentAssertions;
-using Microsoft.Extensions.Logging;
-using Moq;
 using NUnit.Framework;
+using Strategies.StrategyContexts.UstonSS;
+using System.Collections.Generic;
 
 namespace CardCountingTests
 {
     [TestFixture]
     public class CardCountingTest
     {
-        private IGameContext _gameContext;
-        private Mock<IGameSaver> _gameSaverMock = new Mock<IGameSaver>();
-        private readonly Mock<ILogger<UstonSSGameContext>> _loggerMock = new Mock<ILogger<UstonSSGameContext>>();
-        private BetMultiplierCalculator _betMultiplierCalculator;
+        private IStrategyContext _strategyContext;
+        private const int _deckAmount = 3;
+        private const int _expectedBaseCounter = -4 * _deckAmount;
 
         [SetUp]
         public void Init()
         {
-            _betMultiplierCalculator = new BetMultiplierCalculator();
-            WithGameSaver();
-            WithLogger();
-            _gameContext = new UstonSSGameContext(_gameSaverMock.Object, _loggerMock.Object, 3);
-            _gameContext.Initialize();
-        }
-
-        private void WithGameSaver()
-        {
-            _gameSaverMock.Setup(s => s.SaveGames(It.IsAny<List<Game>>()));
-            _gameSaverMock.Setup(s => s.LoadGames())
-                .Returns(new List<Game>()
-                {
-
-                });
-        }
-
-        private void WithLogger()
-        {
-            //_loggerMock.Setup(s => s.LogWarning(It.IsAny<string>()));
+            _strategyContext = new UstonSSStrategyContext(_deckAmount);
         }
 
         [Test]
         public void EmptyGame()
         {
-            var newGame = _gameContext.NewGame();
-            var newDeal = newGame.NewDeal();
-            ThenCounterIs(newGame, newDeal, -6);
+            var newGame = new Game();
+            ThenCounterIs(newGame, _expectedBaseCounter);
         }
 
         [Test]
         public void GameWithOneOpen()
         {
-            var newGame = _gameContext.NewGame();
+            var newGame = new Game();
             var newDeal = newGame.NewDeal();
-            ThenCounterIs(newGame, newDeal, -6);
+            ThenCounterIs(newGame, newDeal, _expectedBaseCounter);
         }
 
         [TestCase(CardType.Two, 2)]
@@ -73,23 +51,20 @@ namespace CardCountingTests
         [TestCase(CardType.Ace, -2)]
         public void GameWithOneOpenAndCard(CardType card, int cardModifier)
         {
-            var newGame = _gameContext.NewGame();
+            var newGame = new Game();
             var newDeal = newGame.NewDeal();
-            newDeal.PlayerHand = new List<CardType>() { card };
-            ThenCounterIs(newGame, -6);
-            ThenCounterIs(newGame, newDeal, -6 + cardModifier);
+            newDeal.PlayerHand.Cards = new List<CardType>() { card };
+            ThenCounterIs(newGame, newDeal, _expectedBaseCounter + cardModifier);
         }
 
         private void ThenCounterIs(Game game, int correctCounter)
         {
-            game.CardCounter.Should().Be(correctCounter);
+            _strategyContext.GetCounter(game).Should().Be(correctCounter);
         }
 
         private void ThenCounterIs(Game game, Deal deal, int correctCounter)
         {
-            (game.CardCounter +
-            game.DealCardCounter.Count(deal))
-                    .Should().Be(correctCounter);
+            _strategyContext.GetCounter(game, deal).Should().Be(correctCounter);
         }
     }
 }

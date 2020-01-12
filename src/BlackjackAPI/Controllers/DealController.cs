@@ -1,9 +1,11 @@
-﻿using BlackjackAPI.Exceptions;
-using BlackjackAPI.Models;
-using BlackjackAPI.Strategies;
-using BlackjackAPI.Strategies.BetStrategy;
+﻿using BlackjackAPI.Services;
+using Core.Components;
+using Core.Constants;
+using Core.Exceptions;
+using Core.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+using Strategies;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,32 +16,27 @@ namespace BlackjackAPI.Controllers
     [ApiController]
     public class DealController
     {
-        public DealController(IGameContext gameContext, ILogger<DealController> logger, IStrategyProvider strategyProvider)
+        public DealController(IGamesRepository gameContext,
+            ILogger<DealController> logger,
+            IStrategyProvider strategyProvider,
+            StrategiesResolver strategiesResolver)
         {
             GameContext = gameContext ?? throw new ArgumentNullException(nameof(gameContext));
             _logger = logger;
             _strategyProvider = strategyProvider;
+            _strategiesResolver = strategiesResolver;
         }
 
-        public IGameContext GameContext { get; }
+        public IGamesRepository GameContext { get; }
         private readonly ILogger<DealController> _logger;
         private readonly IStrategyProvider _strategyProvider;
-        private readonly BetMultiplierCalculator _betMultiplierCalculator = new BetMultiplierCalculator();
+        private readonly StrategiesResolver _strategiesResolver;
 
         [HttpGet]
         [Route("strategy")]
         public IActionResult GetStrategy([FromQuery] string dealToken)
         {
-            Guid dealId;
-            try
-            {
-                dealId = new Guid(dealToken);
-            }
-            catch (Exception e)
-            {
-                throw new BlackjackBadRequestException($"Could not create deal id from: {dealToken}", e);
-            }
-
+            DealId dealId = dealToken.ToDealId();
             Game game;
             Deal deal;
             try
@@ -55,11 +52,16 @@ namespace BlackjackAPI.Controllers
             }
 
             DrawStrategy strategy = DrawStrategy.None;
-            BetMultiplier multiplier;
             try
             {
                 strategy = _strategyProvider.Get(game, deal);
-                multiplier = _betMultiplierCalculator.Calculate(game, dealId);
+                StrategyInfo strategyInfo = _strategiesResolver.GetStrategy(game, deal);
+                return new OkObjectResult(new
+                {
+                    Strategy = strategy.ToString(),
+                    Counter = strategyInfo.Counter,
+                    Multiplier = strategyInfo.BetMultiplier?.Value.ToString("F2")
+                });
             }
             catch (Exception e)
             {
@@ -69,18 +71,18 @@ namespace BlackjackAPI.Controllers
                 }
                 throw new StrategyException($"Could not get strategy for {dealToken}. Check logs for more information.", e);
             }
-            return new OkObjectResult(new
-            {
-                Strategy = strategy.ToString(),
-                Multiplier = multiplier?.Value.ToString("F2")
-            });
         }
 
         [HttpPost]
         [Route("end")]
         public IActionResult EndDeal([FromBody] EndDealModel model)
         {
-            Guid dealId = new Guid(model.DealToken);
+            if (model == null)
+            {
+                throw new BlackjackBadRequestException($"Could not parse request model on {nameof(EndDeal)} endpoint.");
+            }
+
+            DealId dealId = model.DealToken.ToDealId();
             var game = GameContext.Games.Values
                 .ToList()
                 .Find(g => g.History.Exists(d => d.Id == dealId));
@@ -90,7 +92,7 @@ namespace BlackjackAPI.Controllers
             }
 
             game.EndDeal(dealId);
-            GameContext.Save();
+            GameContext.Update(game);
 
             return new OkObjectResult(new
             {
@@ -107,7 +109,12 @@ namespace BlackjackAPI.Controllers
         [Route("update")]
         public IActionResult UpdateDeal([FromBody] UpdateDealModel model)
         {
-            Guid dealId = new Guid(model.DealToken);
+            if (model == null)
+            {
+                throw new BlackjackBadRequestException($"Could not parse request model on {nameof(UpdateDeal)} endpoint.");
+            }
+
+            DealId dealId = model.DealToken.ToDealId();
             var game = GameContext.Games.Values
                 .ToList()
                 .Find(g => g.History.Exists(d => d.Id == dealId));
@@ -122,29 +129,10 @@ namespace BlackjackAPI.Controllers
                 throw new DealEndedException($"Cannot update already ended deal: {model?.DealToken}");
             }
 
-            deal.PlayerHand = new List<CardType>(
-                model.PlayerHand.Select(s =>
-                {
-                    if (ParseCardType(s, out CardType card))
-                    {
-                        return card;
-                    }
+            deal.PlayerHand.Cards = new List<CardType>(model.PlayerHand.Select(ParseCardType));
+            deal.CroupierHand.Cards = new List<CardType>(model.CroupierHand.Select(ParseCardType));
 
-                    throw new ApplicationException($"Invalid card type: {s}");
-                }));
-            deal.CroupierHand = new List<CardType>(
-                model.CroupierHand.Select(s =>
-                {
-                    if (ParseCardType(s, out CardType card))
-                    {
-                        return card;
-                    }
-
-                    throw new ApplicationException($"Invalid card type: {s}");
-                }));
-
-            GameContext.Save();
-
+            GameContext.Update(game);
             return new OkResult();
         }
 
@@ -155,58 +143,13 @@ namespace BlackjackAPI.Controllers
             public List<string> CroupierHand { get; set; }
         }
 
-        private bool ParseCardType(string s, out CardType card)
+        private CardType ParseCardType(string cardString)
         {
-            switch (s)
+            if (Enum.TryParse(cardString, out CardType parsedCard))
             {
-                case "Two":
-                    card = CardType.Two;
-                    return true;
-                case "Three":
-                    card = CardType.Three;
-                    return true;
-                case "Four":
-                    card = CardType.Four;
-                    return true;
-                case "Five":
-                    card = CardType.Five;
-                    return true;
-                case "Six":
-                    card = CardType.Six;
-                    return true;
-                case "Seven":
-                    card = CardType.Seven;
-                    return true;
-                case "Eight":
-                    card = CardType.Eight;
-                    return true;
-                case "Nine":
-                    card = CardType.Nine;
-                    return true;
-                case "Ten":
-                    card = CardType.Ten;
-                    return true;
-                case "Jack":
-                    card = CardType.Jack;
-                    return true;
-                case "Queen":
-                    card = CardType.Queen;
-                    return true;
-                case "King":
-                    card = CardType.King;
-                    return true;
-                case "Ace":
-                    card = CardType.Ace;
-                    return true;
+                return parsedCard;
             }
-
-            card = CardType.None;
-            return false;
-        }
-
-        private DrawStrategy MockStrategy(Game game, Guid dealId)
-        {
-            return DrawStrategy.Hit;
+            throw new ApplicationException($"Unknown card type: {cardString}");
         }
     }
 }

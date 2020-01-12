@@ -1,9 +1,11 @@
-﻿using System;
-using Microsoft.AspNetCore;
+﻿using Autofac.Extensions.DependencyInjection;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using NLog.Web;
+using System;
+using System.IO;
 
 namespace BlackjackAPI
 {
@@ -14,20 +16,27 @@ namespace BlackjackAPI
             NLog.ILogger logger = null;
             try
             {
-                WebHost.CreateDefaultBuilder(args)
+                Host.CreateDefaultBuilder(args)
+                    .UseServiceProviderFactory(new AutofacServiceProviderFactory())
                     .ConfigureLogging((context, logging) =>
                     {
                         logging.ClearProviders();
                         logger = NLogBuilder.ConfigureNLog(context.Configuration.GetValue<string>("Logging:NlogConfiguration")).GetLogger(Startup.LoggerName);
                     })
-                    .UseStartup<Startup>()
+                    .ConfigureWebHostDefaults(webHostBuilder =>
+                    {
+                        webHostBuilder
+                            .UseContentRoot(Directory.GetCurrentDirectory())
+                            .UseIISIntegration()
+                            .UseStartup<Startup>();
+                    })
                     .UseNLog()
                     .Build()
                     .Run();
             }
             catch (Exception ex)
             {
-                logger?.Error("Program start error", ex);
+                logger?.Error(ex, "Program start error");
             }
             finally
             {

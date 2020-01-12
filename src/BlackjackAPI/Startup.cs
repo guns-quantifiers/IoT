@@ -1,7 +1,12 @@
-﻿using BlackjackAPI.Middleware;
-using BlackjackAPI.Models;
-using BlackjackAPI.Services;
-using BlackjackAPI.Strategies;
+﻿using Autofac;
+using BlackjackAPI.Middleware;
+using Core.Components;
+using Core.Constants;
+using Core.Exceptions;
+using Core.Settings;
+using DbDataSource;
+using FileSave;
+using Logging;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.Hosting;
@@ -10,9 +15,17 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Hosting;
+using MongoDB.Bson;
+using MongoDB.Bson.Serialization.Conventions;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Linq;
 using NLog.Web;
+using Strategies;
+using Strategies.BetStrategy;
+using Strategies.StrategyContexts.Knockout;
+using Strategies.StrategyContexts.SilverFox;
+using Strategies.StrategyContexts.UstonSS;
 using System;
 using System.Threading.Tasks;
 
@@ -31,18 +44,124 @@ namespace BlackjackAPI
 
         public void ConfigureServices(IServiceCollection services)
         {
-            //services.AddRouteAnalyzer();
             NLog.ILogger logger =
                 NLogBuilder.
                     ConfigureNLog(Configuration.GetValue<string>("Logging:NlogConfiguration"))
                     .GetLogger(LoggerName);
 
             services.AddSingleton<NLog.ILogger>(logger);
+            services.AddSingleton<IConfiguration>(Configuration);
             services.AddHealthChecks();
-            services.AddControllers();
-            services.AddSingleton<IGameContext, UstonSSGameContext>();
-            services.AddSingleton<IGameSaver, GameSaver>();
+            services.AddControllers()
+                .AddNewtonsoftJson(opts =>
+            {
+                opts.SerializerSettings.Converters.Add(new StringEnumConverter());
+            });
+            services.AddSingleton<IGamesRepository, GamesRepository>();
+            services.AddSingleton<ILogger, Logger>();
+            services.AddSingleton<IGameStorage, FileGameStorage>();
             services.AddSingleton<IStrategyProvider, ChartedBasicStrategy>();
+            RegisterPersistenceSettings(services);
+            ConventionRegistry.Register("EnumStringConvention", new ConventionPack { new EnumRepresentationConvention(BsonType.String) }, t => true);
+
+            void RegisterPersistenceSettings(IServiceCollection services)
+            {
+                if (Configuration.GetSection("PersistenceSettings:Database").Exists())
+                {
+                    logger.Debug("Configuring connection to database.");
+                    services.Configure<DbPersistenceSettings>(Configuration.GetSection("PersistenceSettings:Database"));
+                    services.PostConfigure<DbPersistenceSettings>(dbPersistenceSettings =>
+                    {
+                        dbPersistenceSettings.ConnectionString = Configuration.GetSection("MONGO_CONNECTION_STRING").Value;
+                    });
+                }
+                else if (Configuration.GetSection("PersistenceSettings:FilePath").Exists())
+                {
+                    logger.Debug("Configuring local storage usage.");
+                    services.Configure<LocalPersistenceSettings>(Configuration.GetSection("PersistenceSettings"));
+                }
+                else
+                {
+                    throw new ConfigurationException("Could not find any settings for saving games.");
+                }
+            }
+        }
+
+        //For Autofac
+        public void ConfigureContainer(ContainerBuilder builder)
+        {
+            builder.RegisterType<StrategiesResolver>()
+                .AsSelf()
+                .WithParameter(new TypedParameter(typeof(string), "Classic"))
+                .SingleInstance();
+
+            builder.RegisterType<UstonSSStrategyContext>()
+                .Keyed<IStrategyContext>(CountingStrategy.UstonSS)
+                .SingleInstance();
+            builder.RegisterType<SilverFoxStrategyContext>()
+                .Keyed<IStrategyContext>(CountingStrategy.SilverFox)
+                .SingleInstance();
+            builder.RegisterType<KnockoutStrategyContext>()
+                .Keyed<IStrategyContext>(CountingStrategy.Knockout)
+                .SingleInstance();
+
+            builder.Register<Func<CountingStrategy, IStrategyContext>>(ctx =>
+                {
+                    IComponentContext context = ctx.Resolve<IComponentContext>();
+                    return countingStrategy => context.ResolveKeyed<IStrategyContext>(countingStrategy);
+                })
+                .AsSelf()
+                .SingleInstance();
+
+            builder.Register<IStrategyContext>(ctx =>
+            {
+                IConfiguration config = ctx.Resolve<IConfiguration>();
+                IConfigurationSection strategyConfig = config.GetSection("CountingStrategy");
+                if (strategyConfig.Exists())
+                {
+                    if (Enum.TryParse<CountingStrategy>(strategyConfig.Value,
+                        out CountingStrategy strategy))
+                    {
+                        return ctx.ResolveKeyed<IStrategyContext>(strategy);
+                    }
+
+                    throw new ConfigurationException("Unknown counting strategy type:" + strategyConfig.Value);
+                }
+
+                //fallback to UstonSS
+                return ctx.ResolveKeyed<IStrategyContext>(CountingStrategy.UstonSS);
+            }).InstancePerLifetimeScope();
+
+            builder.Register<CountingStrategy>(ctx =>
+            {
+                IConfigurationSection strategyConfig = ctx.Resolve<IConfiguration>().GetSection("CountingStrategy");
+                if (strategyConfig.Exists())
+                {
+                    if (Enum.TryParse<CountingStrategy>(strategyConfig.Value,
+                        out CountingStrategy strategy))
+                    {
+                        return strategy;
+                    }
+
+                    throw new ConfigurationException("Unknown counting strategy type:" + strategyConfig.Value);
+                }
+
+                throw new ConfigurationException("Could not find default counting strategy in configuration.");
+            }).InstancePerLifetimeScope();
+
+            builder.RegisterType<BetMultiplierCalculator>()
+                .Keyed<IBetMultiplierCalculator>("Classic")
+                .SingleInstance();
+            builder.RegisterType<UnipolarSigmoidalBetCalculator>()
+                .Keyed<IBetMultiplierCalculator>("UnipolarSigmoidal")
+                .SingleInstance();
+            builder.Register<Func<string, IBetMultiplierCalculator>>(ctx =>
+                {
+                    IComponentContext context = ctx.Resolve<IComponentContext>();
+                    return function => context.ResolveKeyed<IBetMultiplierCalculator>(function);
+                })
+                .AsSelf()
+                .SingleInstance();
         }
 
         public void Configure(IApplicationBuilder app,
@@ -50,10 +169,11 @@ namespace BlackjackAPI
             NLog.ILogger logger,
             IHostApplicationLifetime applicationLifetime)
         {
-            if (env.EnvironmentName.Equals("Development", System.StringComparison.OrdinalIgnoreCase))
+            if (env.EnvironmentName.Equals("Development", StringComparison.OrdinalIgnoreCase))
             {
                 app.UseDeveloperExceptionPage();
             }
+
             app.UseMiddleware<RequestResponseLoggingMiddleware>();
             app.UseMiddleware<ErrorHandlingMiddleware>();
 
@@ -62,12 +182,8 @@ namespace BlackjackAPI
                 ResponseWriter = WriteResponse
             });
 
-            var gameContext = app.ApplicationServices.GetService<IGameContext>();
-            gameContext.Initialize();
-
             app.UseRouting();
             app.UseCorsMiddleware();
-
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllers();
@@ -79,19 +195,14 @@ namespace BlackjackAPI
             });
         }
 
+
         private static Task WriteResponse(HttpContext httpContext,
             HealthReport result)
         {
             httpContext.Response.ContentType = "application/json";
 
             var json = new JObject(
-                new JProperty("status", result.Status.ToString())
-                //new JProperty("results", new JObject(result.Entries.Select(pair =>
-                //    new JProperty(pair.Key, new JObject(
-                //        new JProperty("status", pair.Value.Status.ToString()),
-                //        new JProperty("description", pair.Value.Description),
-                //        new JProperty("data", new JObject(pair.Value.Data.Select(
-                //            p => new JProperty(p.Key, p.Value)))))))))
+                    new JProperty("status", result.Status.ToString())
                 );
             return httpContext.Response.WriteAsync(
                 json.ToString(Formatting.Indented));

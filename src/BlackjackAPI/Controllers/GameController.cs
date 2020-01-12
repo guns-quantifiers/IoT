@@ -1,4 +1,7 @@
-﻿using BlackjackAPI.Models;
+﻿using BlackjackAPI.Services;
+using Core.Components;
+using Core.Exceptions;
+using Core.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using System;
@@ -11,33 +14,33 @@ namespace BlackjackAPI.Controllers
     [ApiController]
     public class GameController
     {
-        public GameController(IGameContext gameContext, ILogger<GameController> logger)
+        public GameController(IGamesRepository gameContext, ILogger<GameController> logger)
         {
-            GameContext = gameContext ?? throw new ArgumentNullException(nameof(gameContext));
+            _gameContext = gameContext ?? throw new ArgumentNullException(nameof(gameContext));
             _logger = logger;
         }
 
-        public IGameContext GameContext { get; }
+        private readonly IGamesRepository _gameContext;
         private readonly ILogger<GameController> _logger;
 
         [HttpGet]
         [Route("")]
         public ActionResult<List<Game>> Get()
         {
-            return GameContext.Games.Values.ToList();
+            return _gameContext.Games.Values.ToList();
         }
-        
+
         [HttpPost]
         [Route("create")]
         public IActionResult CreateGame()
         {
-          _logger.LogInformation("New game creation POST accepted.");
+            _logger.LogInformation("New game creation POST accepted.");
             try
             {
-                var newGame = GameContext.NewGame();
+                var newGame = _gameContext.NewGame();
                 return new OkObjectResult(new
                 {
-                    gameToken = newGame.Id
+                    gameToken = newGame.Id.ToString()
                 });
             }
             catch (Exception e)
@@ -51,14 +54,20 @@ namespace BlackjackAPI.Controllers
         [Route("addDeal")]
         public IActionResult AddDeal([FromBody] AddDealModel model)
         {
-            var gameId = new Guid(model.GameToken);
-            if(GameContext.Games.TryGetValue(gameId, out Game game))
+            if (model == null)
+            {
+                throw new BlackjackBadRequestException($"Could not parse request model on {nameof(AddDeal)} endpoint.");
+            }
+
+            GameId gameId = model.GameToken.ToGameId();
+            if (_gameContext.Games.TryGetValue(gameId, out Game game))
             {
                 _logger.LogInformation($"New add deal POST accepted for game {model.GameToken}");
                 var deal = game.NewDeal();
+                _gameContext.Update(game);
                 return new OkObjectResult(new
                 {
-                    dealToken = deal.Id
+                    dealToken = deal.Id.ToString()
                 });
             }
 
@@ -77,7 +86,7 @@ namespace BlackjackAPI.Controllers
         [Route("clearAll")]
         public IActionResult ClearAll()
         {
-            GameContext.ClearAll();
+            _gameContext.ClearAll();
             return new OkResult();
         }
     }

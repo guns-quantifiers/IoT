@@ -4,7 +4,7 @@ using System;
 
 namespace Strategies.BetStrategy
 {
-    public class BetMultiplierCalculator : IBetMultiplierCalculator
+    public class ClassicCalculator : IBetMultiplierCalculator
     {
         public BetMultiplier Calculate(int counter) => MultiplierFunction(counter);
 

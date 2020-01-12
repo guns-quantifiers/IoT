@@ -2,6 +2,8 @@
 using Core.Constants;
 using Core.Exceptions;
 using Core.Models;
+using Strategies.BetStrategy;
+using Strategies.BetStrategy.Parameters;
 using System;
 
 namespace Strategies
@@ -9,31 +11,25 @@ namespace Strategies
     public class StrategiesResolver
     {
         private readonly Func<CountingStrategy, IStrategyContext> _countingStrategyFunc;
-        private readonly Func<string, IBetMultiplierCalculator> _betMultiplierFunc;
-        private string _betMultiplierCalculatorFunction;
-        private CountingStrategy _countingStrategy;
+        private ICalculatorConfiguration _betMultiplierCalculatorConfiguration = new LinearConfiguration { A = 1, B = 0 };
 
-        public string BetFunction { get; }
-        public CountingStrategy CountingStrategy { get; }
+        public string BetFunction => _betMultiplierCalculatorConfiguration.Equation;
+        public CountingStrategy CountingStrategy { get; private set; }
 
         public StrategiesResolver(
-            string betMultiplierCalculatorFunction,
             CountingStrategy countingStrategy,
-            Func<CountingStrategy, IStrategyContext> countingStrategyFunc,
-            Func<string, IBetMultiplierCalculator> betMultiplierFunc)
+            Func<CountingStrategy, IStrategyContext> countingStrategyFunc)
         {
-            _betMultiplierCalculatorFunction = betMultiplierCalculatorFunction;
-            _countingStrategy = countingStrategy;
+            CountingStrategy = countingStrategy;
             _countingStrategyFunc = countingStrategyFunc;
-            _betMultiplierFunc = betMultiplierFunc;
         }
 
         public StrategyInfo GetStrategy(Game game, Deal deal)
         {
             try
             {
-                int countingCounter = _countingStrategyFunc(_countingStrategy).GetCounter(game, deal);
-                BetMultiplier multiplier = _betMultiplierFunc(_betMultiplierCalculatorFunction).Calculate(countingCounter);
+                int countingCounter = _countingStrategyFunc(CountingStrategy).GetCounter(game, deal);
+                BetMultiplier multiplier = _betMultiplierCalculatorConfiguration.ToBetCalculator().Calculate(countingCounter);
                 return new StrategyInfo(countingCounter, multiplier);
             }
             catch (Exception e)
@@ -44,12 +40,12 @@ namespace Strategies
 
         public void SetCountingStrategy(CountingStrategy type)
         {
-            _countingStrategy = type;
+            CountingStrategy = type;
         }
 
-        public void SetMultiplierStrategy(string function)
+        public void SetMultiplierStrategy(ICalculatorConfiguration configuration)
         {
-            _betMultiplierCalculatorFunction = function;
+            _betMultiplierCalculatorConfiguration = configuration;
         }
     }
 }

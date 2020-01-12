@@ -22,7 +22,6 @@ using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Linq;
 using NLog.Web;
 using Strategies;
-using Strategies.BetStrategy;
 using Strategies.StrategyContexts.Knockout;
 using Strategies.StrategyContexts.SilverFox;
 using Strategies.StrategyContexts.UstonSS;
@@ -148,20 +147,6 @@ namespace BlackjackAPI
 
                 throw new ConfigurationException("Could not find default counting strategy in configuration.");
             }).InstancePerLifetimeScope();
-
-            builder.RegisterType<BetMultiplierCalculator>()
-                .Keyed<IBetMultiplierCalculator>("Classic")
-                .SingleInstance();
-            builder.RegisterType<UnipolarSigmoidalBetCalculator>()
-                .Keyed<IBetMultiplierCalculator>("UnipolarSigmoidal")
-                .SingleInstance();
-            builder.Register<Func<string, IBetMultiplierCalculator>>(ctx =>
-                {
-                    IComponentContext context = ctx.Resolve<IComponentContext>();
-                    return function => context.ResolveKeyed<IBetMultiplierCalculator>(function);
-                })
-                .AsSelf()
-                .SingleInstance();
         }
 
         public void Configure(IApplicationBuilder app,

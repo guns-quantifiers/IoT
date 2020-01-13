@@ -4,7 +4,7 @@
     {
         Linear,
         Quadratic,
-        Classic,
-        UnipolarSigmoid
+        Logistic,
+        AlgebraicSigmoid
     }
 }

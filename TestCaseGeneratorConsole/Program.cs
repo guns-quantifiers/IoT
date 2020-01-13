@@ -18,7 +18,7 @@ namespace TestCaseGeneratorConsole
                 CountingStrategy.UstonSS,
                 5,
                 0.66);
-            TestCaseGenerator generator = new TestCaseGenerator(new UnipolarSigmoidalBetCalculator());
+            TestCaseGenerator generator = new TestCaseGenerator(new LogisticFunctionBetCalculator(1, 1, 0));
             List<PlayerDecision> testResults = generator.Generate(settings);
 
             //ConsoleWriteResults();

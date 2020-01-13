@@ -8,7 +8,6 @@ using DbDataSource;
 using FileSave;
 using Logging;
 using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
@@ -50,11 +49,19 @@ namespace BlackjackAPI
 
             services.AddSingleton<NLog.ILogger>(logger);
             services.AddSingleton<IConfiguration>(Configuration);
-            services.AddHealthChecks();
+            //services.AddHealthChecks();
             services.AddControllers()
                 .AddNewtonsoftJson(opts =>
             {
                 opts.SerializerSettings.Converters.Add(new StringEnumConverter());
+            });
+            services.AddCors(options =>
+            {
+                options.AddDefaultPolicy(builder =>
+                {
+                    builder.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod()
+                        .SetPreflightMaxAge(TimeSpan.FromSeconds(600));
+                });
             });
             services.AddSingleton<IGamesRepository, GamesRepository>();
             services.AddSingleton<ILogger, Logger>();
@@ -162,12 +169,14 @@ namespace BlackjackAPI
             app.UseMiddleware<RequestResponseLoggingMiddleware>();
             app.UseMiddleware<ErrorHandlingMiddleware>();
 
-            app.UseHealthChecks("/health", new HealthCheckOptions()
-            {
-                ResponseWriter = WriteResponse
-            });
+            //app.UseHealthChecks("/health", new HealthCheckOptions()
+            //{
+            //    ResponseWriter = WriteResponse
+            //});
 
             app.UseRouting();
+            app.UseCors();
+            app.UseOptions();
             app.UseCorsMiddleware();
             app.UseEndpoints(endpoints =>
             {

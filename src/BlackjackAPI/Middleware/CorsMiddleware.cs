@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 // For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
@@ -17,10 +18,10 @@ namespace BlackjackAPI.Middleware
 
         public Task Invoke(HttpContext httpContext)
         {
-            httpContext.Response.Headers.Add("Access-Control-Allow-Origin", "*");
-            httpContext.Response.Headers.Add("Access-Control-Allow-Credentials", "true");
-            httpContext.Response.Headers.Add("Access-Control-Allow-Headers", "Content-Type, X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Date, X-Api-Version, X-File-Name");
-            httpContext.Response.Headers.Add("Access-Control-Allow-Methods", "POST,GET,PUT,PATCH,DELETE,OPTIONS");
+            httpContext.Response.Headers.TryAdd("Access-Control-Allow-Origin", "*");
+            httpContext.Response.Headers.TryAdd("Access-Control-Allow-Credentials", "true");
+            httpContext.Response.Headers.TryAdd("Access-Control-Allow-Headers", "Content-Type, X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Date, X-Api-Version, X-File-Name");
+            httpContext.Response.Headers.TryAdd("Access-Control-Allow-Methods", "POST,GET,PUT,PATCH,DELETE,OPTIONS");
             return _next(httpContext);
         }
     }

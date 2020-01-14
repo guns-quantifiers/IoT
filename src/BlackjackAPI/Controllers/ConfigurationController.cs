@@ -5,6 +5,7 @@ using Strategies;
 using Strategies.BetStrategy;
 using Strategies.BetStrategy.Parameters;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -99,8 +100,20 @@ namespace BlackjackAPI.Controllers
         {
             return new OkObjectResult(new
             {
-                Strategy = _strategiesResolver.BetFunction
+                Strategy = new
+                {
+                    Name = _strategiesResolver.BetFunctionType,
+                    Formula = _strategiesResolver.BetFunctionEquation,
+                    Params = GetWritableProperties(_strategiesResolver.BetCalculatorConfiguration)
+                }
             });
+
+            ICollection GetWritableProperties(ICalculatorConfiguration value) =>
+                value.GetType().GetProperties().Where(p => p.CanWrite).Select(p => new
+                {
+                    Name = p.Name,
+                    Value = p.GetValue(value)
+                }).ToList();
         }
 
         [HttpGet]

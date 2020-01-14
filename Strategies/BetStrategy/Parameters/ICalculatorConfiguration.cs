@@ -6,5 +6,6 @@ namespace Strategies.BetStrategy.Parameters
     {
         IBetMultiplierCalculator ToBetCalculator();
         string Equation { get; }
+        BetFunctionType Type { get; }
     }
 }

@@ -41,5 +41,6 @@ namespace Strategies.BetStrategy
         }
 
         public string Equation => $"{L:F2} / (1 + e^(-{K:F2}(x-{X0:F2})))";
+        public BetFunctionType Type => BetFunctionType.Logistic;
     }
 }

@@ -13,7 +13,9 @@ namespace Strategies
         private readonly Func<CountingStrategy, IStrategyContext> _countingStrategyFunc;
         private ICalculatorConfiguration _betMultiplierCalculatorConfiguration = new LinearConfiguration { A = 1, B = 0 };
 
-        public string BetFunction => _betMultiplierCalculatorConfiguration.Equation;
+        public string BetFunctionEquation => _betMultiplierCalculatorConfiguration.Equation;
+        public BetFunctionType BetFunctionType => _betMultiplierCalculatorConfiguration.Type;
+        public ICalculatorConfiguration BetCalculatorConfiguration => _betMultiplierCalculatorConfiguration;
         public CountingStrategy CountingStrategy { get; private set; }
 
         public StrategiesResolver(

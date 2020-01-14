@@ -32,5 +32,6 @@ namespace Strategies.BetStrategy
         }
 
         public string Equation => $"{A.ToString("F2")}x + {B.ToString("F2")}";
+        public BetFunctionType Type => BetFunctionType.Linear;
     }
 }

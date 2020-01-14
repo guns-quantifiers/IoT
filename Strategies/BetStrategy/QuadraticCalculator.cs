@@ -35,5 +35,6 @@ namespace Strategies.BetStrategy
         }
 
         public string Equation => $"{A.ToString("F2")}x^2 + {B.ToString("F2")}x + {C.ToString("F2")}";
+        public BetFunctionType Type => BetFunctionType.Quadratic;
     }
 }

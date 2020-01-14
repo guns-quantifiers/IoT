@@ -41,5 +41,6 @@ namespace Strategies.BetStrategy
         }
 
         public string Equation => $"{L:F2}x / sqrt(1 + {K:F2}(x-{X0:F2}))";
+        public BetFunctionType Type => BetFunctionType.AlgebraicSigmoid;
     }
 }

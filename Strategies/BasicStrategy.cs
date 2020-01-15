@@ -29,21 +29,21 @@ namespace Strategies
                 case 9:
                     if (croupierHand.Sum() > 2 && croupierHand.Sum() <= 5)
                     {
-                        return DrawStrategy.DoubleDown;
+                        return DrawStrategy.DoubleDownOrHit;
                     }
 
                     return DrawStrategy.Hit;
                 case 10:
                     if (croupierHand.Sum() >= 2 && croupierHand.Sum() <= 9)
                     {
-                        return DrawStrategy.DoubleDown;
+                        return DrawStrategy.DoubleDownOrHit;
                     }
 
                     return DrawStrategy.Hit;
                 case 11:
                     if (croupierHand.Sum() >= 2 && croupierHand.Sum() <= 10)
                     {
-                        return DrawStrategy.DoubleDown;
+                        return DrawStrategy.DoubleDownOrHit;
                     }
                     //then dealer has ace
                     return DrawStrategy.Hit;
@@ -86,7 +86,7 @@ namespace Strategies
                 case 14:
                     if (croupierHand.Sum() == 5 || croupierHand.Sum() == 6)
                     {
-                        return DrawStrategy.DoubleDown;
+                        return DrawStrategy.DoubleDownOrHit;
                     }
 
                     return DrawStrategy.Hit;
@@ -94,14 +94,14 @@ namespace Strategies
                 case 16:
                     if (croupierHand.Sum() >= 4 && croupierHand.Sum() <= 6)
                     {
-                        return DrawStrategy.DoubleDown;
+                        return DrawStrategy.DoubleDownOrHit;
                     }
 
                     return DrawStrategy.Hit;
                 case 17:
                     if (croupierHand.Sum() >= 3 && croupierHand.Sum() <= 6)
                     {
-                        return DrawStrategy.DoubleDown;
+                        return DrawStrategy.DoubleDownOrHit;
                     }
                     return DrawStrategy.Hit;
                 case 18:
@@ -111,11 +111,11 @@ namespace Strategies
                         case 4:
                         case 5:
                         case 6:
-                            return DrawStrategy.DoubleDown;
+                            return DrawStrategy.DoubleDownOrHit;
                         case 9:
                         case 10:
                         case 11:
-                            return DrawStrategy.DoubleDown;
+                            return DrawStrategy.DoubleDownOrHit;
                         case 2:
                         case 7:
                         case 8:

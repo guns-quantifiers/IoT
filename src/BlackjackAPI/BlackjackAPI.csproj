@@ -38,6 +38,7 @@
     <ProjectReference Include="..\..\FileSave\FileSave.csproj" />
     <ProjectReference Include="..\..\Logging\Logging.csproj" />
     <ProjectReference Include="..\..\Strategies\Strategies.csproj" />
+    <ProjectReference Include="..\..\StrategyTests\StrategyTests.csproj" />
   </ItemGroup>
 
   <ItemGroup>

@@ -1,10 +1,9 @@
-﻿using Core.Constants;
+﻿using BlackjackAPI.Controllers.Models;
+using Core.Constants;
 using Microsoft.AspNetCore.Mvc;
-using Newtonsoft.Json.Linq;
 using Strategies;
 using Strategies.BetStrategy;
 using Strategies.BetStrategy.Parameters;
-using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -62,36 +61,12 @@ namespace BlackjackAPI.Controllers
         [Route("betStrategy")]
         public IActionResult SetBetStrategy([FromBody] SetBetStrategyModel model)
         {
-            _strategiesResolver.SetMultiplierStrategy(BindCalculatorConfiguration(model));
+            _strategiesResolver.SetMultiplierStrategy(model.TryBindCalculatorConfiguration());
             return new OkObjectResult(new
             {
                 Message = "Ok",
                 NewStrategy = model.FunctionType
             });
-
-            ICalculatorConfiguration BindCalculatorConfiguration(SetBetStrategyModel model)
-            {
-                try
-                {
-                    return model.FunctionType switch
-                    {
-                        BetFunctionType.Linear => model.Parameters.ToObject<LinearConfiguration>() as ICalculatorConfiguration,
-                        BetFunctionType.Quadratic => model.Parameters.ToObject<QuadraticConfiguration>(),
-                        BetFunctionType.Logistic => model.Parameters.ToObject<LogisticFunctionConfiguration>(),
-                        BetFunctionType.AlgebraicSigmoid => model.Parameters.ToObject<AlgebraicSigmoidConfiguration>(),
-                        _ => throw new ArgumentException($"Cannot parse to known bet function parameters, got: {model.Parameters}")
-                    };
-                }
-                catch (Exception e)
-                {
-                    throw new ArgumentException($"Cannot parse to known bet function parameters, got: {model.Parameters}", e);
-                }
-            }
-        }
-        public class SetBetStrategyModel
-        {
-            public BetFunctionType FunctionType { get; set; }
-            public JObject Parameters { get; set; }
         }
 
         [HttpGet]

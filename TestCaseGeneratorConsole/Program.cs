@@ -13,12 +13,13 @@ namespace TestCaseGeneratorConsole
         static void Main(string[] args)
         {
             TestCaseSettings settings = new TestCaseSettings(
-                800,
                 4,
                 CountingStrategy.UstonSS,
                 5,
-                0.66);
-            TestCaseGenerator generator = new TestCaseGenerator(new LogisticFunctionBetCalculator(1, 1, 0));
+                0.66,
+                10,
+                new LinearConfiguration() { A = 1, B = 1 });
+            TestCaseGenerator generator = new TestCaseGenerator();
             List<PlayerDecision> testResults = generator.Generate(settings);
 
             //ConsoleWriteResults();

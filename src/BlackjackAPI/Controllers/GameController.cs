@@ -1,9 +1,12 @@
-﻿using BlackjackAPI.Services;
+﻿using BlackjackAPI.Controllers.Models;
+using BlackjackAPI.Services;
 using Core.Components;
+using Core.Constants;
 using Core.Exceptions;
 using Core.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+using StrategyTests;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -88,6 +91,71 @@ namespace BlackjackAPI.Controllers
         {
             _gameContext.ClearAll();
             return new OkResult();
+        }
+
+
+        [HttpPost]
+        [Route("generate")]
+        public List<GamesGenerationSingleResult> Generate(GamesGenerateParameters parameters)
+        {
+            var parametersProperties = typeof(GamesGenerateParameters).GetProperties().Select(p => p.GetValue(parameters));
+            if (parametersProperties.Any(p => p == null))
+            {
+                throw new ArgumentException("You need to specify all parameters for games auto generation.");
+            }
+
+            List<PlayerDecision> generationtResults = new TestCaseGenerator().Generate(new TestCaseSettings(
+                parameters.NumberOfDecks,
+                parameters.CountingStrategy,
+                5,
+                parameters.DeckPenetration,
+                parameters.GamesToGenerate,
+                parameters.BetStrategy.TryBindCalculatorConfiguration(),
+                parameters.Seed));
+
+            return generationtResults.Select(r =>
+            {
+                var currentDeal = r.GameSnapshot.History.LastOrDefault();
+                return new GamesGenerationSingleResult()
+                {
+                    GameID = r.GameSnapshot.Id.ToString(),
+                    BetMultiplier = r.BetMultiplier,
+                    Counter = r.Counter,
+                    Decision = r.Type,
+                    Deal = new DealSnapshotModel
+                    {
+                        ID = currentDeal?.Id.ToString(),
+                        Croupier = currentDeal?.CroupierHand.Cards,
+                        Player = currentDeal?.PlayerHand.Cards
+                    }
+                };
+            }).ToList();
+        }
+
+        public class GamesGenerateParameters
+        {
+            public CountingStrategy CountingStrategy { get; set; }
+            public SetBetStrategyModel BetStrategy { get; set; }
+            public int NumberOfDecks { get; set; }
+            public double DeckPenetration { get; set; }
+            public int GamesToGenerate { get; set; }
+            public int Seed { get; set; } = new Random().Next();
+        }
+
+        public class GamesGenerationSingleResult
+        {
+            public string GameID { get; set; }
+            public DealSnapshotModel Deal { get; set; }
+            public int Counter { get; set; }
+            public double BetMultiplier { get; set; }
+            public DrawStrategy Decision { get; set; }
+        }
+
+        public class DealSnapshotModel
+        {
+            public string ID { get; set; }
+            public List<CardType> Croupier { get; set; }
+            public List<CardType> Player { get; set; }
         }
     }
 }

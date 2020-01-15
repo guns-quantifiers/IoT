@@ -23,9 +23,7 @@ namespace Strategies.BetStrategy
         private BetMultiplier MultiplierFunction(int counter)
             => new BetMultiplier
             {
-                Value = counter > 0
-                    ? _l * counter / (1 + Math.Sqrt(1 + _k * Math.Pow((counter - _x0), 2)))   // l*x / sqrt (1 + k(x-x0)^2)
-                    : 1
+                Value = _l * counter / (1 + Math.Sqrt(1 + _k * Math.Pow((counter - _x0), 2))) // l*x / sqrt (1 + k(x-x0)^2)
             };
     }
 

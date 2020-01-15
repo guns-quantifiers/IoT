@@ -7,19 +7,20 @@ namespace StrategyTests
 {
     public class GameDeck
     {
-        private static readonly Random Random = new Random(0); // constant seed for the ease of debugging
+        private readonly Random _random; // constant seed for the ease of debugging
         private readonly int _numberOfDecks;
         private readonly double _penetrationRate;
 
         private Queue<CardType> _shuffledCards;
         private int _drawnCardsCounter = 0;
 
-        public GameDeck(int numberOfDecks, double penetrationRate)
+        public GameDeck(int numberOfDecks, double penetrationRate, int seed)
         {
             if (penetrationRate <= 0 || penetrationRate > 1)
             {
                 throw new ArgumentException("Deck must have penetration rate between 0 (exclusive) and 1 (inclusive), got: " + penetrationRate);
             }
+            _random = new Random(seed);
             _numberOfDecks = numberOfDecks;
             _penetrationRate = penetrationRate;
             Shuffle();
@@ -65,7 +66,7 @@ namespace StrategyTests
                 cards.Add(CardType.King);
                 cards.Add(CardType.Ace);
             }
-            _shuffledCards = new Queue<CardType>(cards.OrderBy(c => Random.Next()));
+            _shuffledCards = new Queue<CardType>(cards.OrderBy(c => _random.Next()));
             _drawnCardsCounter = 0;
         }
     }

@@ -2,6 +2,7 @@
 using Core.Constants;
 using Core.Models;
 using Strategies;
+using Strategies.BetStrategy.Parameters;
 using Strategies.StrategyContexts.Knockout;
 using Strategies.StrategyContexts.SilverFox;
 using Strategies.StrategyContexts.UstonSS;
@@ -13,33 +14,22 @@ namespace StrategyTests
 {
     public class TestCaseGenerator
     {
-        private readonly IBetMultiplierCalculator _betMultiplierCalculator;
-
-        public TestCaseGenerator(IBetMultiplierCalculator betMultiplierCalculator)
-        {
-            _betMultiplierCalculator = betMultiplierCalculator;
-        }
-
         public List<PlayerDecision> Generate(TestCaseSettings settings)
         {
-            GameDeck deck = new GameDeck(settings.Decks, settings.MaxDeckPenetration);
+            GameDeck deck = new GameDeck(settings.NumberOfDecks, settings.DeckPenetration, settings.Seed);
+            IBetMultiplierCalculator betMultiplierCalculator = settings.CalculatorConfiguration.ToBetCalculator();
             IStrategyContext countingStrategy = GetStrategyContext(settings);
             IStrategyProvider strategy = new ChartedBasicStrategy();
-            List<PlayerDecision> decisions = new List<PlayerDecision>(settings.DecisionsAmount);
+            List<PlayerDecision> decisions = new List<PlayerDecision>();
 
             Game currentGame = new Game();
-            int dealsCounter = -1;
+            int dealsCounter = -1, currentBetCounter, gamesCounter = 0;
             double currentBet;
-            int currentBetCounter;
             Deal currentDeal;
             StartNewDeal();
-            for (int decisionNumber = 0; decisionNumber < settings.DecisionsAmount; decisionNumber++)
+            while (gamesCounter < settings.GamesToGenerate)
             {
                 double currentDecisionImpact = 0;
-                if (currentDeal.IsEnded)
-                {
-                    StartNewDeal();
-                }
 
                 DrawStrategy move = strategy.Get(currentGame, currentDeal);
                 switch (move)
@@ -48,10 +38,6 @@ namespace StrategyTests
                         PlayerDraws();
                         break;
 
-                    case DrawStrategy.DoubleDown:
-                        currentBet *= 2;
-                        PlayerDraws();
-                        break;
                     case DrawStrategy.DoubleDownOrHit:
                         if (currentDeal.PlayerHand.Cards.Count == 2)
                             currentBet *= 2;
@@ -69,16 +55,18 @@ namespace StrategyTests
                         break;
 
                     case DrawStrategy.Stand:
-                    case DrawStrategy.None:
                         EndDeal();
                         break;
+                    case DrawStrategy.None:
                     default:
                         throw new ArgumentException("Unknown move strategy: " + move);
                 }
 
-                if (dealsCounter % 2 == 0) // count only half of the deals to simulate other players existence in the same game
+                decisions.Add(new PlayerDecision(move, currentDecisionImpact, currentGame.Clone(), currentBetCounter, betMultiplierCalculator.Calculate(currentBetCounter).Value));
+
+                if (currentDeal.IsEnded)
                 {
-                    decisions.Add(new PlayerDecision(move, currentDecisionImpact, currentGame.Clone(), currentBetCounter));
+                    StartNewDeal();
                 }
 
                 void EndDeal()
@@ -128,12 +116,13 @@ namespace StrategyTests
                 if (deck.CheckShuffle())
                 {
                     currentGame = new Game();
+                    gamesCounter++;
                 }
                 currentDeal = currentGame.NewDeal();
                 Debug.WriteLine($"Started new deal ({dealsCounter}): " + currentDeal.Id.Value.Increment);
                 dealsCounter++;
                 currentBetCounter = countingStrategy.GetCounter(currentGame, currentDeal);
-                currentBet = settings.MinimumBet * _betMultiplierCalculator.Calculate(currentBetCounter).Value;
+                currentBet = settings.MinimumBet * betMultiplierCalculator.Calculate(currentBetCounter).Value;
                 CroupierDraws();
                 PlayerDraws();
                 PlayerDraws();
@@ -145,7 +134,7 @@ namespace StrategyTests
         private IStrategyContext GetStrategyContext(TestCaseSettings settings) =>
             settings.CountingStrategy switch
             {
-                CountingStrategy.UstonSS => new UstonSSStrategyContext(settings.Decks) as IStrategyContext,
+                CountingStrategy.UstonSS => new UstonSSStrategyContext(settings.NumberOfDecks) as IStrategyContext,
                 CountingStrategy.SilverFox => new SilverFoxStrategyContext(),
                 CountingStrategy.Knockout => new KnockoutStrategyContext(),
                 _ => throw new ArgumentException("Unknown counting strategy: " + settings.CountingStrategy)
@@ -154,19 +143,23 @@ namespace StrategyTests
 
     public class TestCaseSettings
     {
-        public TestCaseSettings(int decisionsAmount, int decks, CountingStrategy countingStrategy, int minimumBet, double maxDeckPenetration)
+        public TestCaseSettings(int decks, CountingStrategy countingStrategy, int minimumBet, double maxDeckPenetration, int gamesToGenerate, ICalculatorConfiguration calculatorConfiguration, int seed)
         {
-            DecisionsAmount = decisionsAmount;
-            Decks = decks;
+            NumberOfDecks = decks;
             CountingStrategy = countingStrategy;
             MinimumBet = minimumBet;
-            MaxDeckPenetration = maxDeckPenetration;
+            DeckPenetration = maxDeckPenetration;
+            GamesToGenerate = gamesToGenerate;
+            CalculatorConfiguration = calculatorConfiguration;
+            Seed = seed;
         }
 
-        public int DecisionsAmount { get; }
-        public int Decks { get; }
+        public int GamesToGenerate { get; }
+        public int Seed { get; }
+        public ICalculatorConfiguration CalculatorConfiguration { get; }
+        public int NumberOfDecks { get; }
         public CountingStrategy CountingStrategy { get; }
         public int MinimumBet { get; }
-        public double MaxDeckPenetration { get; }
+        public double DeckPenetration { get; }
     }
 }

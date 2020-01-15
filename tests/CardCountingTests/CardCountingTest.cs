@@ -21,12 +21,6 @@ namespace CardCountingTests
             _strategyContext = new UstonSSStrategyContext(_deckAmount);
         }
 
-        [Test]
-        public void EmptyGame()
-        {
-            var newGame = new Game();
-            ThenCounterIs(newGame, _expectedBaseCounter);
-        }
 
         [Test]
         public void GameWithOneOpen()
@@ -55,11 +49,6 @@ namespace CardCountingTests
             var newDeal = newGame.NewDeal();
             newDeal.PlayerHand.Cards = new List<CardType>() { card };
             ThenCounterIs(newGame, newDeal, _expectedBaseCounter + cardModifier);
-        }
-
-        private void ThenCounterIs(Game game, int correctCounter)
-        {
-            _strategyContext.GetCounter(game).Should().Be(correctCounter);
         }
 
         private void ThenCounterIs(Game game, Deal deal, int correctCounter)

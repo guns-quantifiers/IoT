@@ -21,9 +21,6 @@ using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Linq;
 using NLog.Web;
 using Strategies;
-using Strategies.StrategyContexts.Knockout;
-using Strategies.StrategyContexts.SilverFox;
-using Strategies.StrategyContexts.UstonSS;
 using System;
 using System.Threading.Tasks;
 
@@ -98,25 +95,12 @@ namespace BlackjackAPI
         {
             builder.RegisterType<StrategiesResolver>()
                 .AsSelf()
-                .WithParameter(new TypedParameter(typeof(string), "Classic"))
-                .SingleInstance();
-
-            builder.RegisterType<UstonSSStrategyContext>()
-                .Keyed<IStrategyContext>(CountingStrategy.UstonSS)
-                .SingleInstance();
-            builder.RegisterType<SilverFoxStrategyContext>()
-                .Keyed<IStrategyContext>(CountingStrategy.SilverFox)
-                .SingleInstance();
-            builder.RegisterType<KnockoutStrategyContext>()
-                .Keyed<IStrategyContext>(CountingStrategy.Knockout)
-                .SingleInstance();
-
-            builder.Register<Func<CountingStrategy, IStrategyContext>>(ctx =>
+                .WithParameter(new TypedParameter(typeof(SetCountingStrategyModel), new SetCountingStrategyModel
                 {
-                    IComponentContext context = ctx.Resolve<IComponentContext>();
-                    return countingStrategy => context.ResolveKeyed<IStrategyContext>(countingStrategy);
-                })
-                .AsSelf()
+                    DeckAmount = 1,
+                    UseTrueCounter = false,
+                    Strategy = CountingStrategy.SilverFox
+                }))
                 .SingleInstance();
 
             builder.Register<IStrategyContext>(ctx =>

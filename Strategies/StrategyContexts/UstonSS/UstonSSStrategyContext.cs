@@ -4,21 +4,14 @@ using System.Linq;
 
 namespace Strategies.StrategyContexts.UstonSS
 {
-    public class UstonSSStrategyContext : IStrategyContext
+    public class UstonSSStrategyContext : BaseStrategyContext, IStrategyContext
     {
-        private readonly int _deckAmount;
-        private readonly IDealCardCounter _cardCounter = new UstonSSCardCounter();
-
-        public UstonSSStrategyContext(int deckAmount = 2)
+        public UstonSSStrategyContext(int deckAmount, bool useTrueCounter) : base(deckAmount, new UstonSSCardCounter(), useTrueCounter)
         {
-            _deckAmount = deckAmount;
         }
 
-        public int GetCounter(Game game, Deal deal)
-            => GetCounter(game) + _cardCounter.Count(deal);
-
-        public int GetCounter(Game game) => game.History
+        protected override int GetRunningCounter(Game game) => game.History
             .Where(d => d.IsEnded)
-            .Aggregate(-4 * _deckAmount, (sum, nextDeal) => sum + _cardCounter.Count(nextDeal));
+            .Aggregate(-4 * DeckAmount, (sum, nextDeal) => sum + CardCounter.Count(nextDeal));
     }
 }

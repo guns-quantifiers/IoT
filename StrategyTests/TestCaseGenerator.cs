@@ -3,9 +3,6 @@ using Core.Constants;
 using Core.Models;
 using Strategies;
 using Strategies.BetStrategy.Parameters;
-using Strategies.StrategyContexts.Knockout;
-using Strategies.StrategyContexts.SilverFox;
-using Strategies.StrategyContexts.UstonSS;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -18,7 +15,7 @@ namespace StrategyTests
         {
             GameDeck deck = new GameDeck(settings.NumberOfDecks, settings.DeckPenetration, settings.Seed);
             IBetMultiplierCalculator betMultiplierCalculator = settings.CalculatorConfiguration.ToBetCalculator();
-            IStrategyContext countingStrategy = GetStrategyContext(settings);
+            IStrategyContext countingStrategy = settings.CountingStrategyModel.GetStrategyContext();
             IStrategyProvider strategy = new ChartedBasicStrategy();
             List<PlayerDecision> decisions = new List<PlayerDecision>();
 
@@ -130,23 +127,14 @@ namespace StrategyTests
             void PlayerDraws() => currentDeal.PlayerHand.Cards.Add(deck.DrawNext());
             void CroupierDraws() => currentDeal.CroupierHand.Cards.Add(deck.DrawNext());
         }
-
-        private IStrategyContext GetStrategyContext(TestCaseSettings settings) =>
-            settings.CountingStrategy switch
-            {
-                CountingStrategy.UstonSS => new UstonSSStrategyContext(settings.NumberOfDecks) as IStrategyContext,
-                CountingStrategy.SilverFox => new SilverFoxStrategyContext(),
-                CountingStrategy.Knockout => new KnockoutStrategyContext(),
-                _ => throw new ArgumentException("Unknown counting strategy: " + settings.CountingStrategy)
-            };
     }
 
     public class TestCaseSettings
     {
-        public TestCaseSettings(int decks, CountingStrategy countingStrategy, int minimumBet, double maxDeckPenetration, int gamesToGenerate, ICalculatorConfiguration calculatorConfiguration, int seed)
+        public TestCaseSettings(int decks, SetCountingStrategyModel countingStrategyModel, int minimumBet, double maxDeckPenetration, int gamesToGenerate, ICalculatorConfiguration calculatorConfiguration, int seed)
         {
             NumberOfDecks = decks;
-            CountingStrategy = countingStrategy;
+            CountingStrategyModel = countingStrategyModel;
             MinimumBet = minimumBet;
             DeckPenetration = maxDeckPenetration;
             GamesToGenerate = gamesToGenerate;
@@ -158,7 +146,7 @@ namespace StrategyTests
         public int Seed { get; }
         public ICalculatorConfiguration CalculatorConfiguration { get; }
         public int NumberOfDecks { get; }
-        public CountingStrategy CountingStrategy { get; }
+        public SetCountingStrategyModel CountingStrategyModel { get; }
         public int MinimumBet { get; }
         public double DeckPenetration { get; }
     }

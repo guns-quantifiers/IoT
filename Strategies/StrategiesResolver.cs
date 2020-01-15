@@ -4,33 +4,33 @@ using Core.Exceptions;
 using Core.Models;
 using Strategies.BetStrategy;
 using Strategies.BetStrategy.Parameters;
+using Strategies.StrategyContexts.Knockout;
+using Strategies.StrategyContexts.SilverFox;
+using Strategies.StrategyContexts.UstonSS;
 using System;
 
 namespace Strategies
 {
     public class StrategiesResolver
     {
-        private readonly Func<CountingStrategy, IStrategyContext> _countingStrategyFunc;
         private ICalculatorConfiguration _betMultiplierCalculatorConfiguration = new LinearConfiguration { A = 1, B = 0 };
 
         public string BetFunctionEquation => _betMultiplierCalculatorConfiguration.Equation;
         public BetFunctionType BetFunctionType => _betMultiplierCalculatorConfiguration.Type;
         public ICalculatorConfiguration BetCalculatorConfiguration => _betMultiplierCalculatorConfiguration;
-        public CountingStrategy CountingStrategy { get; private set; }
+        public SetCountingStrategyModel CountingStrategyConfiguration { get; private set; }
 
         public StrategiesResolver(
-            CountingStrategy countingStrategy,
-            Func<CountingStrategy, IStrategyContext> countingStrategyFunc)
+            SetCountingStrategyModel countingStrategy)
         {
-            CountingStrategy = countingStrategy;
-            _countingStrategyFunc = countingStrategyFunc;
+            CountingStrategyConfiguration = countingStrategy;
         }
 
         public StrategyInfo GetStrategy(Game game, Deal deal)
         {
             try
             {
-                int countingCounter = _countingStrategyFunc(CountingStrategy).GetCounter(game, deal);
+                int countingCounter = CountingStrategyConfiguration.GetStrategyContext().GetCounter(game, deal);
                 BetMultiplier multiplier = _betMultiplierCalculatorConfiguration.ToBetCalculator().Calculate(countingCounter);
                 return new StrategyInfo(countingCounter, multiplier);
             }
@@ -40,9 +40,9 @@ namespace Strategies
             }
         }
 
-        public void SetCountingStrategy(CountingStrategy type)
+        public void SetCountingStrategy(SetCountingStrategyModel countingStrategyParameters)
         {
-            CountingStrategy = type;
+            CountingStrategyConfiguration = countingStrategyParameters;
         }
 
         public void SetMultiplierStrategy(ICalculatorConfiguration configuration)
@@ -50,16 +50,33 @@ namespace Strategies
             _betMultiplierCalculatorConfiguration = configuration;
         }
     }
-}
 
-public class StrategyInfo
-{
-    public StrategyInfo(int counter, BetMultiplier betMultiplier)
+    public class StrategyInfo
     {
-        Counter = counter;
-        BetMultiplier = betMultiplier;
+        public StrategyInfo(int counter, BetMultiplier betMultiplier)
+        {
+            Counter = counter;
+            BetMultiplier = betMultiplier;
+        }
+
+        public int Counter { get; }
+        public BetMultiplier BetMultiplier { get; }
     }
 
-    public int Counter { get; }
-    public BetMultiplier BetMultiplier { get; }
+    public class SetCountingStrategyModel
+    {
+        public CountingStrategy Strategy { get; set; }
+        public bool UseTrueCounter { get; set; }
+        public int DeckAmount { get; set; }
+        public IStrategyContext GetStrategyContext()
+        {
+            return Strategy switch
+            {
+                CountingStrategy.SilverFox => new SilverFoxStrategyContext(DeckAmount, UseTrueCounter) as IStrategyContext,
+                CountingStrategy.UstonSS => new UstonSSStrategyContext(DeckAmount, UseTrueCounter),
+                CountingStrategy.Knockout => new KnockoutStrategyContext(DeckAmount, UseTrueCounter),
+                _ => throw new ArgumentException("Unknown counting strategy: " + Strategy)
+            };
+        }
+    }
 }

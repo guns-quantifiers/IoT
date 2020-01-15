@@ -6,6 +6,7 @@ using Core.Exceptions;
 using Core.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+using Strategies;
 using StrategyTests;
 using System;
 using System.Collections.Generic;
@@ -134,7 +135,7 @@ namespace BlackjackAPI.Controllers
 
         public class GamesGenerateParameters
         {
-            public CountingStrategy CountingStrategy { get; set; }
+            public SetCountingStrategyModel CountingStrategy { get; set; }
             public SetBetStrategyModel BetStrategy { get; set; }
             public int NumberOfDecks { get; set; }
             public double DeckPenetration { get; set; }

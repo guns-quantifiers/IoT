@@ -4,19 +4,15 @@ using System.Linq;
 
 namespace Strategies.StrategyContexts.SilverFox
 {
-    public class SilverFoxStrategyContext : IStrategyContext
+    public class SilverFoxStrategyContext : BaseStrategyContext, IStrategyContext
     {
-        private readonly IDealCardCounter _cardCounter = new SilverFoxCardCounter();
-
-        public SilverFoxStrategyContext()
+        public SilverFoxStrategyContext(int deckAmount, bool useTrueCounter) : base(deckAmount, new SilverFoxCardCounter(), useTrueCounter)
         {
         }
 
-        public int GetCounter(Game game, Deal deal)
-            => GetCounter(game) + _cardCounter.Count(deal);
 
-        public int GetCounter(Game game) => game.History
+        protected override int GetRunningCounter(Game game) => game.History
             .Where(d => d.IsEnded)
-            .Aggregate(0, (sum, nextDeal) => sum + _cardCounter.Count(nextDeal));
+            .Aggregate(0, (sum, nextDeal) => sum + CardCounter.Count(nextDeal));
     }
 }

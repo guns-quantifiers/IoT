@@ -25,16 +25,12 @@ namespace BlackjackAPI.Controllers
         [Route("countingStrategy")]
         public IActionResult SetCountingStrategy([FromBody] SetCountingStrategyModel model)
         {
-            _strategiesResolver.SetCountingStrategy(model.Strategy);
+            _strategiesResolver.SetCountingStrategy(model);
             return new OkObjectResult(new
             {
                 Message = "Ok",
-                NewStrategy = _strategiesResolver.CountingStrategy
+                NewStrategy = _strategiesResolver.CountingStrategyConfiguration
             });
-        }
-        public class SetCountingStrategyModel
-        {
-            public CountingStrategy Strategy { get; set; }
         }
 
         [HttpGet]
@@ -43,7 +39,7 @@ namespace BlackjackAPI.Controllers
         {
             return new OkObjectResult(new
             {
-                Strategy = _strategiesResolver.CountingStrategy
+                Strategy = _strategiesResolver.CountingStrategyConfiguration
             });
         }
 

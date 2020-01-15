@@ -18,7 +18,8 @@ namespace TestCaseGeneratorConsole
                 5,
                 0.66,
                 10,
-                new LinearConfiguration() { A = 1, B = 1 });
+                new LinearConfiguration() { A = 1, B = 1 },
+                1);
             TestCaseGenerator generator = new TestCaseGenerator();
             List<PlayerDecision> testResults = generator.Generate(settings);
 

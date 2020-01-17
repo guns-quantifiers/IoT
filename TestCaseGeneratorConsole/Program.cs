@@ -1,5 +1,6 @@
 ﻿using Core.Constants;
 using Core.Models;
+using Strategies;
 using Strategies.BetStrategy;
 using StrategyTests;
 using System;
@@ -14,7 +15,12 @@ namespace TestCaseGeneratorConsole
         {
             TestCaseSettings settings = new TestCaseSettings(
                 4,
-                CountingStrategy.UstonSS,
+                new SetCountingStrategyModel()
+                {
+                    Strategy = CountingStrategy.UstonSS,
+                    DeckAmount = 6,
+                    UseTrueCounter = true
+                },
                 5,
                 0.66,
                 10,

@@ -54,6 +54,7 @@ namespace Strategies
         public DrawStrategy Get(Game game, Deal deal)
         {
             var (playerHand, croupierHand) = deal;
+            croupierHand = new List<CardType> { croupierHand.First() };
             if (playerHand.Contains(CardType.Ace))
             {
                 return HandleSoftHand(playerHand, croupierHand);

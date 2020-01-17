@@ -13,7 +13,7 @@ namespace BlackjackAPI.Controllers
         [Route("")]
         public ActionResult<string> Get()
         {
-            return Ok("1.0.1");
+            return Ok("1.0.5");
         }
     }
 }

@@ -17,6 +17,7 @@ namespace BlackjackAPI.Controllers.Models
                 return FunctionType switch
                 {
                     BetFunctionType.Linear => Parameters.ToObject<LinearConfiguration>() as ICalculatorConfiguration,
+                    BetFunctionType.Classic => new ClassicConfiguration(),
                     BetFunctionType.Quadratic => Parameters.ToObject<QuadraticConfiguration>(),
                     BetFunctionType.Logistic => Parameters.ToObject<LogisticFunctionConfiguration>(),
                     BetFunctionType.AlgebraicSigmoid => Parameters.ToObject<AlgebraicSigmoidConfiguration>(),

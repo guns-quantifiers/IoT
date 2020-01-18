@@ -3,6 +3,7 @@
     public enum BetFunctionType
     {
         Linear,
+        Classic,
         Quadratic,
         Logistic,
         AlgebraicSigmoid

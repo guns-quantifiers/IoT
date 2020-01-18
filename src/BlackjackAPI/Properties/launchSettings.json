@@ -19,7 +19,6 @@
     },
     "BlackjackAPIVPN": {
       "commandName": "Project",
-      "launchBrowser": false,
       "launchUrl": "api/values",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
@@ -28,7 +27,6 @@
     },
     "BlackjackAPIDDNS": {
       "commandName": "Project",
-      "launchBrowser": false,
       "launchUrl": "api/values",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
@@ -37,13 +35,13 @@
     },
     "BlackjackAPI": {
       "commandName": "Project",
-      "launchBrowser": false,
       "launchUrl": "api/values",
       "environmentVariables": {
+        "MONGO_CONNECTION_STRING": "mongodb+srv://USER:PASS@black-cluster-74n0h.azure.mongodb.net/test?retryWrites=true&w=majority&readConcernLevel=majority",
         "ASPNETCORE_ENVIRONMENT": "Development"
       },
-      "applicationUrl": "https://localhost:5001;http://localhost:5000",
-      "ancmHostingModel": "InProcess"
+      "ancmHostingModel": "InProcess",
+      "applicationUrl": "https://localhost:5001;http://localhost:5000"
     },
     "Docker": {
       "commandName": "Docker",

@@ -1,5 +1,6 @@
 ﻿using Core.Components;
 using Core.Constants;
+using Core.Exceptions;
 using Core.Models;
 using System.Collections.Generic;
 using System.Linq;
@@ -54,6 +55,10 @@ namespace Strategies
         public DrawStrategy Get(Game game, Deal deal)
         {
             var (playerHand, croupierHand) = deal;
+            if (croupierHand?.Any() != true)
+            {
+                throw new EmptyHandException("Cannot calculate strategy with empty croupier hand.");
+            }
             croupierHand = new List<CardType> { croupierHand.First() };
             if (playerHand.Contains(CardType.Ace))
             {
@@ -76,7 +81,6 @@ namespace Strategies
 
             if (playerHand.SumWithOneAceAs1() > 10)
             {
-                // we cannot currently do anything more thoughtful so
                 return HandleHardHand(playerHand, croupierHand);
             }
 

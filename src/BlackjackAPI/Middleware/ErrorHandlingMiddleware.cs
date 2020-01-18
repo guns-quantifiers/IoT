@@ -46,6 +46,7 @@ namespace BlackjackAPI.Middleware
                 case BadHttpRequestException _:
                 case DuplicateKeyException _:
                 case DealEndedException _:
+                case EmptyHandException _:
                     code = HttpStatusCode.BadRequest;
                     break;
             }

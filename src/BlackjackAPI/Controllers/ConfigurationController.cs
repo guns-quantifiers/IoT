@@ -97,12 +97,14 @@ namespace BlackjackAPI.Controllers
                 {
                     new BetFunctionConfigurationResponse(BetFunctionType.Linear,
                         GetWritablePropertiesNames<LinearConfiguration>()),
+                    new BetFunctionConfigurationResponse(BetFunctionType.Classic,
+                        GetWritablePropertiesNames<ClassicConfiguration>()),
                     new BetFunctionConfigurationResponse(BetFunctionType.Quadratic,
                         GetWritablePropertiesNames<QuadraticConfiguration>()),
                     new BetFunctionConfigurationResponse(BetFunctionType.Logistic,
                         GetWritablePropertiesNames<LogisticFunctionConfiguration>()),
                     new BetFunctionConfigurationResponse(BetFunctionType.AlgebraicSigmoid,
-                        GetWritablePropertiesNames<AlgebraicSigmoidConfiguration>())
+                        GetWritablePropertiesNames<AlgebraicSigmoidConfiguration>()),
                 }
             });
 

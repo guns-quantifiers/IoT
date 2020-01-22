@@ -5,6 +5,7 @@ using Core.Settings;
 using Microsoft.Extensions.Options;
 using MongoDB.Driver;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -21,7 +22,7 @@ namespace DbDataSource
             _logger = logger;
             _database = ConnectToDatabase(settings.Value.ConnectionString, settings.Value.DatabaseName);
             _logger.Debug($"Connected to database: {_database.DatabaseNamespace.DatabaseName}");
-            _games = GetCollection(settings.Value.CollectionName);
+            _games = _database.GetCollection<Game>(settings.Value.CollectionName);
             _logger.Debug($"Loaded collection: {_games.CollectionNamespace.FullName}");
             _logger = logger;
         }
@@ -53,8 +54,23 @@ namespace DbDataSource
         public void Update(Game game)
         {
             _logger.Debug($"Trying to update game: {game.Id} in database.");
+            var timer = new Stopwatch();
+            timer.Start();
             UpdateDocumentAsync(game).Wait();
-            _logger.Debug($"Successfully updated game: {game.Id} in database.");
+            timer.Stop();
+            _logger.Debug($"Successfully updated game: {game.Id} in database. Time: {timer.Elapsed.TotalMilliseconds}");
+        }
+
+        public bool TryFindOne(GameId id, out Game game)
+        {
+            game = _games.Find(g => g.Id == id).SingleOrDefault();
+            return game != null;
+        }
+
+        public bool TryFindGameForDeal(DealId id, out Game game)
+        {
+            game = _games.Find(g => g.History.Any(d => d.Id == id)).SingleOrDefault();
+            return game != null;
         }
 
         public void ClearAll()
@@ -72,11 +88,6 @@ namespace DbDataSource
             return client.GetDatabase(database);
         }
 
-        private IMongoCollection<Game> GetCollection(string collection)
-        {
-            return _database.GetCollection<Game>(collection);
-        }
-
         private async Task AddDocumentAsync(Game document)
         {
             await _games.InsertOneAsync(document);
@@ -84,16 +95,10 @@ namespace DbDataSource
 
         private async Task UpdateDocumentAsync(Game document)
         {
-            await _games.DeleteOneAsync(g => g.Id.Value == document.Id.Value)
-             .ContinueWith(t => _games.InsertOneAsync(document));
+            await _games.ReplaceOneAsync(g => g.Id.Value == document.Id.Value, document);
         }
 
-        private async Task<IEnumerable<Game>> GetAllAsync()
-        {
-            return (await _games.FindAsync(FilterDefinition<Game>.Empty)).ToEnumerable();
-        }
-
-        private IEnumerable<Game> GetAll()
+        public IEnumerable<Game> GetAll()
         {
             return (_games.Find(FilterDefinition<Game>.Empty)).ToList();
         }

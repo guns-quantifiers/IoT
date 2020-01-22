@@ -18,7 +18,7 @@ namespace CardCountingTests
         [SetUp]
         public void Init()
         {
-            _strategyContext = new UstonSSStrategyContext(_deckAmount);
+            _strategyContext = new UstonSSStrategyContext(_deckAmount, false);
         }
 
 

@@ -36,7 +36,7 @@ namespace Strategies
         {
 
             return hand.Select(Value).Sum()
-                   -(hand.Contains(CardType.Ace) ? 10 : 0);
+                   - (hand.Contains(CardType.Ace) ? 10 : 0);
         }
 
         public static int Value(this CardType card)
@@ -67,7 +67,7 @@ namespace Strategies
             {
                 1 => DrawStrategy.Hit,
                 2 => DrawStrategy.Stand,
-                3 => DrawStrategy.Hit, //TODO: split
+                3 => DrawStrategy.Hit,
                 4 => DrawStrategy.DoubleDownOrHit,
                 5 => DrawStrategy.DoubleDownOrStand,
                 _ => DrawStrategy.Stand,

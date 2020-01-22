@@ -31,7 +31,7 @@ namespace BlackjackAPI.Controllers
         [Route("")]
         public ActionResult<List<Game>> Get()
         {
-            return _gameContext.Games.Values.ToList();
+            return _gameContext.GetAll().ToList();
         }
 
         [HttpPost]
@@ -64,7 +64,7 @@ namespace BlackjackAPI.Controllers
             }
 
             GameId gameId = model.GameToken.ToGameId();
-            if (_gameContext.Games.TryGetValue(gameId, out Game game))
+            if (_gameContext.TryFindOne(gameId, out Game game))
             {
                 _logger.LogInformation($"New add deal POST accepted for game {model.GameToken}");
                 var deal = game.NewDeal();

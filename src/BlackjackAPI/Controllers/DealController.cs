@@ -37,13 +37,11 @@ namespace BlackjackAPI.Controllers
         public IActionResult GetStrategy([FromQuery] string dealToken)
         {
             DealId dealId = dealToken.ToDealId();
-            Game game;
             Deal deal;
+            Game game;
             try
             {
-                game = GameContext.Games.Values
-                .ToList()
-                .Find(g => g.History.Exists(d => d.Id == dealId));
+                GameContext.TryFindGameForDeal(dealId, out game);
                 deal = game.History.Find(d => d.Id == dealId);
             }
             catch (Exception e)
@@ -83,9 +81,7 @@ namespace BlackjackAPI.Controllers
             }
 
             DealId dealId = model.DealToken.ToDealId();
-            var game = GameContext.Games.Values
-                .ToList()
-                .Find(g => g.History.Exists(d => d.Id == dealId));
+            GameContext.TryFindGameForDeal(dealId, out Game game);
             if (game == null)
             {
                 throw new NotFoundException($"No game with deal with id {model?.DealToken}");
@@ -115,9 +111,7 @@ namespace BlackjackAPI.Controllers
             }
 
             DealId dealId = model.DealToken.ToDealId();
-            var game = GameContext.Games.Values
-                .ToList()
-                .Find(g => g.History.Exists(d => d.Id == dealId));
+            GameContext.TryFindGameForDeal(dealId, out Game game);
             if (game == null)
             {
                 throw new NotFoundException($"No game with deal with {model?.DealToken}");

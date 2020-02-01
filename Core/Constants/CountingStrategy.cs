@@ -4,6 +4,7 @@
     {
         UstonSS,
         SilverFox,
-        Knockout
+        Knockout,
+        Optimal
     }
 }

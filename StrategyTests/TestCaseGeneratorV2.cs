@@ -2,14 +2,13 @@
 using Core.Constants;
 using Core.Models;
 using Strategies;
-using Strategies.BetStrategy.Parameters;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 
 namespace StrategyTests
 {
-    public class TestCaseGenerator
+    public class TestCaseGeneratorV2
     {
         public List<PlayerDecision> Generate(TestCaseSettings settings)
         {
@@ -54,12 +53,11 @@ namespace StrategyTests
                     case DrawStrategy.Stand:
                         EndDeal();
                         break;
-                    case DrawStrategy.None:
                     default:
                         throw new ArgumentException("Unknown move strategy: " + move);
                 }
 
-                decisions.Add(new PlayerDecision(move, currentDecisionImpact, currentGame.Clone(), currentBetCounter, betMultiplierCalculator.Calculate(currentBetCounter).Value));
+                decisions.Add(new PlayerDecision(move, currentDecisionImpact, currentGame.Clone(), currentBetCounter, currentBetMultiplier));
 
                 if (currentDeal.IsEnded)
                 {
@@ -119,8 +117,8 @@ namespace StrategyTests
                 Debug.WriteLine($"Started new deal ({dealsCounter}): " + currentDeal.Id.Value.Increment);
                 dealsCounter++;
                 currentBetCounter = countingStrategy.GetCounter(currentGame, currentDeal);
-                currentBet = settings.MinimumBet;
                 currentBetMultiplier = betMultiplierCalculator.Calculate(currentBetCounter).Value;
+                currentBet = settings.MinimumBet;
                 if (currentBetMultiplier > 0)
                 {
                     currentBet += currentBetMultiplier * settings.BasicBet;
@@ -136,31 +134,5 @@ namespace StrategyTests
             void PlayerDraws() => currentDeal.PlayerHand.Cards.Add(deck.DrawNext());
             void CroupierDraws() => currentDeal.CroupierHand.Cards.Add(deck.DrawNext());
         }
-    }
-
-    public class TestCaseSettings
-    {
-        public TestCaseSettings(int decks, SetCountingStrategyModel countingStrategyModel, int minimumBet, int maximumBet, int basicBet, double maxDeckPenetration, int gamesToGenerate, ICalculatorConfiguration calculatorConfiguration, int seed)
-        {
-            NumberOfDecks = decks;
-            CountingStrategyModel = countingStrategyModel;
-            MinimumBet = minimumBet;
-            MaximumBet = maximumBet;
-            BasicBet = basicBet;
-            DeckPenetration = maxDeckPenetration;
-            GamesToGenerate = gamesToGenerate;
-            CalculatorConfiguration = calculatorConfiguration;
-            Seed = seed;
-        }
-
-        public int GamesToGenerate { get; }
-        public int Seed { get; }
-        public ICalculatorConfiguration CalculatorConfiguration { get; }
-        public int NumberOfDecks { get; }
-        public SetCountingStrategyModel CountingStrategyModel { get; }
-        public int MinimumBet { get; }
-        public int BasicBet { get; }
-        public int MaximumBet { get; }
-        public double DeckPenetration { get; }
     }
 }

@@ -2,14 +2,13 @@
 using Core.Models;
 using System.Linq;
 
-namespace Strategies.StrategyContexts.SilverFox
+namespace Strategies.StrategyContexts.Optimal
 {
-    public class SilverFoxStrategyContext : BaseStrategyContext, IStrategyContext
+    public class OptimalStrategyContext : BaseStrategyContext, IStrategyContext
     {
-        public SilverFoxStrategyContext(int deckAmount, bool useTrueCounter) : base(deckAmount, new SilverFoxCardCounter(), useTrueCounter)
+        public OptimalStrategyContext(int deckAmount, bool useTrueCounter) : base(deckAmount, new OptimalCardCounter(), useTrueCounter)
         {
         }
-
 
         protected override double GetRunningCounter(Game game) => game.History
             .Where(d => d.IsEnded)

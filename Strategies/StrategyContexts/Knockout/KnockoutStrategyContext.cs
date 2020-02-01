@@ -10,7 +10,7 @@ namespace Strategies.StrategyContexts.Knockout
         {
         }
 
-        protected override int GetRunningCounter(Game game) => game.History
+        protected override double GetRunningCounter(Game game) => game.History
             .Where(d => d.IsEnded)
             .Aggregate(0, (sum, nextDeal) => sum + CardCounter.Count(nextDeal));
     }

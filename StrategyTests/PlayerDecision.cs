@@ -5,7 +5,7 @@ namespace StrategyTests
 {
     public class PlayerDecision
     {
-        public PlayerDecision(DrawStrategy type, double value, Game gameSnapshot, int counter, double betMultiplier)
+        public PlayerDecision(DrawStrategy type, double value, Game gameSnapshot, double counter, double betMultiplier)
         {
             Type = type;
             Value = value;
@@ -17,7 +17,7 @@ namespace StrategyTests
         public DrawStrategy Type { get; }
         public double Value { get; }
         public double BetMultiplier { get; }
-        public int Counter { get; }
+        public double Counter { get; }
         public Game GameSnapshot { get; }
     }
 }

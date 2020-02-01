@@ -1,11 +1,9 @@
 ﻿using Core.Constants;
-using Core.Models;
 using Strategies;
-using Strategies.BetStrategy;
 using StrategyTests;
-using System;
 using System.Collections.Generic;
-using System.Linq;
+using System.IO;
+using TestCaseGeneratorConsole.ResultsExport;
 
 namespace TestCaseGeneratorConsole
 {
@@ -14,51 +12,32 @@ namespace TestCaseGeneratorConsole
         static void Main(string[] args)
         {
             TestCaseSettings settings = new TestCaseSettings(
-                4,
+                6,
+                //new SetCountingStrategyModel()
+                //{
+                //    Strategy = CountingStrategy.UstonSS,
+                //    DeckAmount = 6,
+                //    UseTrueCounter = true
+                //},
                 new SetCountingStrategyModel()
                 {
-                    Strategy = CountingStrategy.UstonSS,
+                    Strategy = CountingStrategy.Optimal,
                     DeckAmount = 6,
                     UseTrueCounter = true
                 },
-                5,
-                0.66,
                 10,
-                new LinearConfiguration() { A = 1, B = 1 },
-                1);
-            TestCaseGenerator generator = new TestCaseGenerator();
+                250,
+                10,
+                0.75,
+                200,
+                //new Strategies.BetStrategy.LinearConfiguration() { A = 1, B = -1 },
+                //new Strategies.BetStrategy.QuadraticConfiguration() { A = 0.15, B = 0.8, C = -1 },
+                new Strategies.BetStrategy.LogisticFunctionConfiguration() { A = 0.01, L = 0.12, K = 1.2, X0 = -0.5 },
+                23);
+            TestCaseGeneratorV2 generator = new TestCaseGeneratorV2();
             List<PlayerDecision> testResults = generator.Generate(settings);
-
-            //ConsoleWriteResults();
-
-            Console.WriteLine($"====> Number of deals: {testResults.Select(d => d.GameSnapshot.History.Last()).GroupBy(d => d.Id.Value.Increment).Count()}");
-            Console.WriteLine($"====> SUM: {testResults.Sum(d => d.Value)}");
-            Console.WriteLine($"====> Max counter: {testResults.Max(d => d.Counter)}");
-            Console.WriteLine($"====> Bet with max counter: {testResults.OrderBy(d => -d.Counter).FirstOrDefault(c => Math.Abs(c.Value) > 0.01)?.Value}");
-            Console.WriteLine();
-            Console.WriteLine($"====> Min counter: {testResults.Min(d => d.Counter)}");
-            Console.WriteLine($"====> Bet with Min counter: {testResults.OrderBy(d => d.Counter).FirstOrDefault(c => Math.Abs(c.Value) > 0.01)?.Value}");
-            Console.WriteLine();
-            Console.WriteLine($"====> Biggest win: {testResults.Max(d => d.Value)}");
-            Console.WriteLine($"====> Biggest loss: {testResults.Min(d => d.Value)}");
-
-            void ConsoleWriteResults()
-            {
-                foreach (var playerDecision in testResults)
-                {
-                    Console.WriteLine($"Move: {playerDecision.Type} Value: {playerDecision.Value} for counter:  {playerDecision.Counter}");
-                    Console.WriteLine($"{playerDecision.GameSnapshot.History.LastOrDefault()?.DealConsoleWrite()}");
-                    Console.WriteLine($"<-------->{Environment.NewLine}");
-                }
-            }
-        }
-
-        public static string DealConsoleWrite(this Deal deal)
-        {
-            return $"Deal: {deal.Id.Value.Increment}{Environment.NewLine} +" +
-                   $" Ended: {deal.IsEnded}{Environment.NewLine}" +
-                   $" Croupier: {string.Join(", ", deal.CroupierHand.Cards)}{Environment.NewLine}" +
-                   $" Player: {string.Join(", ", deal.PlayerHand.Cards)}{Environment.NewLine}";
+            ExcelResultExporter exporter = new ExcelResultExporter(Path.Combine(Directory.GetCurrentDirectory(), "ExcelResults"), true);
+            exporter.SaveResultsToFile(testResults, settings);
         }
     }
 }

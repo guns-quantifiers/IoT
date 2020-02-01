@@ -4,6 +4,6 @@ namespace Core.Components
 {
     public interface IBetMultiplierCalculator
     {
-        BetMultiplier Calculate(int counter);
+        BetMultiplier Calculate(double counter);
     }
 }

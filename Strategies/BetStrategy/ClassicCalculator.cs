@@ -1,25 +1,33 @@
 ﻿using Core.Components;
 using Core.Models;
 using Strategies.BetStrategy.Parameters;
+using System;
 
 namespace Strategies.BetStrategy
 {
     public class ClassicCalculator : IBetMultiplierCalculator
     {
-        public BetMultiplier Calculate(int counter) => new BetMultiplier
+        public BetMultiplier Calculate(double counter)
         {
-            Value = counter < 1
+            if (counter % 1 == 0)
+            {
+                throw new ArgumentException("Cannot use current type of bet function with floating point counter value.");
+            }
+            return new BetMultiplier
+            {
+                Value = counter < 1
                     ? 0
                     : counter == 1
-                      ? 1
-                      : counter == 2
-                        ? 2
-                        : counter == 3
-                          ? 4
-                          : counter == 4
-                            ? 8
-                            : 12 // counter >= 5
-        };
+                        ? 1
+                        : counter == 2
+                            ? 2
+                            : counter == 3
+                                ? 4
+                                : counter == 4
+                                    ? 8
+                                    : 12 // counter >= 5
+            };
+        }
     }
 
     public class ClassicConfiguration : ICalculatorConfiguration

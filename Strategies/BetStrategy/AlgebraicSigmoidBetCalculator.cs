@@ -18,9 +18,9 @@ namespace Strategies.BetStrategy
             _x0 = x0;
         }
 
-        public BetMultiplier Calculate(int counter) => MultiplierFunction(counter);
+        public BetMultiplier Calculate(double counter) => MultiplierFunction(counter);
 
-        private BetMultiplier MultiplierFunction(int counter)
+        private BetMultiplier MultiplierFunction(double counter)
             => new BetMultiplier
             {
                 Value = _l * counter / (1 + Math.Sqrt(1 + _k * Math.Pow((counter - _x0), 2))) // l*x / sqrt (1 + k(x-x0)^2)

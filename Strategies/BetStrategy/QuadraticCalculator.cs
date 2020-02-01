@@ -17,10 +17,20 @@ namespace Strategies.BetStrategy
             _c = c;
         }
 
-        public BetMultiplier Calculate(int counter) => new BetMultiplier
+        public BetMultiplier Calculate(double counter)
         {
-            Value = _a * counter * counter + _b * counter + _c
-        };
+            if (counter <= 0)
+            {
+                return new BetMultiplier
+                {
+                    Value = 0
+                };
+            }
+            return new BetMultiplier
+            {
+                Value = _a * counter * counter + _b * counter + _c
+            };
+        }
     }
 
     public class QuadraticConfiguration : ICalculatorConfiguration

@@ -97,7 +97,8 @@ namespace BlackjackAPI.Controllers
 
         [HttpPost]
         [Route("generate")]
-        public List<GamesGenerationSingleResult> Generate(GamesGenerateParameters parameters)
+        public List<GamesGenerationSingleResult> Generate(GamesGenerateParameters
+            parameters)
         {
             var parametersProperties = typeof(GamesGenerateParameters).GetProperties().Select(p => p.GetValue(parameters));
             if (parametersProperties.Any(p => p == null))
@@ -108,6 +109,8 @@ namespace BlackjackAPI.Controllers
             List<PlayerDecision> generationtResults = new TestCaseGenerator().Generate(new TestCaseSettings(
                 parameters.NumberOfDecks,
                 parameters.CountingStrategy,
+                5,
+                125,
                 5,
                 parameters.DeckPenetration,
                 parameters.GamesToGenerate,
@@ -147,7 +150,7 @@ namespace BlackjackAPI.Controllers
         {
             public string GameID { get; set; }
             public DealSnapshotModel Deal { get; set; }
-            public int Counter { get; set; }
+            public double Counter { get; set; }
             public double BetMultiplier { get; set; }
             public DrawStrategy Decision { get; set; }
         }
@@ -157,6 +160,43 @@ namespace BlackjackAPI.Controllers
             public string ID { get; set; }
             public List<CardType> Croupier { get; set; }
             public List<CardType> Player { get; set; }
+        }
+
+        [HttpPost]
+        [Route("generateFile")]
+        public IActionResult GenerateFile(FileGenerateParameters parameters)
+        {
+            var parametersProperties = typeof(FileGenerateParameters).GetProperties().Select(p => p.GetValue(parameters));
+            if (parametersProperties.Any(p => p == null))
+            {
+                throw new ArgumentException("You need to specify all parameters for games auto generation.");
+            }
+
+            List<PlayerDecision> generationResults = new TestCaseGeneratorV2().Generate(new TestCaseSettings(
+                parameters.NumberOfDecks,
+                parameters.CountingStrategy,
+                parameters.MinimumBet,
+                parameters.MaximumBet,
+                parameters.BasicBet,
+                parameters.DeckPenetration,
+                parameters.GamesToGenerate,
+                parameters.BetStrategy.TryBindCalculatorConfiguration(),
+                parameters.Seed));
+
+
+        }
+
+        public class FileGenerateParameters
+        {
+            public SetCountingStrategyModel CountingStrategy { get; set; }
+            public SetBetStrategyModel BetStrategy { get; set; }
+            public int NumberOfDecks { get; set; }
+            public double DeckPenetration { get; set; }
+            public int MinimumBet { get; set; }
+            public int MaximumBet { get; set; }
+            public int BasicBet { get; set; }
+            public int GamesToGenerate { get; set; }
+            public int Seed { get; set; } = new Random().Next();
         }
     }
 }

@@ -15,7 +15,7 @@ namespace Strategies.BetStrategy
             _b = b;
         }
 
-        public BetMultiplier Calculate(int counter) => new BetMultiplier
+        public BetMultiplier Calculate(double counter) => new BetMultiplier
         {
             Value = _a * counter + _b
         };

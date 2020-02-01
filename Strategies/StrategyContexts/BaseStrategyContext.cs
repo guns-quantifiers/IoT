@@ -16,11 +16,11 @@ namespace Strategies.StrategyContexts
             CardCounter = cardCounter;
             _useTrueCounter = useTrueCounter;
         }
-        public int GetCounter(Game game, Deal deal)
+        public double GetCounter(Game game, Deal deal)
             => GetTrueOrRunningCounter(game, deal);
 
-        protected abstract int GetRunningCounter(Game game);
-        private int GetTrueOrRunningCounter(Game game, Deal deal)
+        protected abstract double GetRunningCounter(Game game);
+        private double GetTrueOrRunningCounter(Game game, Deal deal)
         {
             var runningCounter = GetRunningCounter(game) + CardCounter.Count(deal);
             var trueCounterDivisor = _useTrueCounter ?

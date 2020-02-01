@@ -7,7 +7,7 @@ namespace StrategyTests
 {
     public class GameDeck
     {
-        private readonly Random _random; // constant seed for the ease of debugging
+        private readonly Random _random;
         private readonly int _numberOfDecks;
         private readonly double _penetrationRate;
 
@@ -26,10 +26,6 @@ namespace StrategyTests
             Shuffle();
         }
 
-        /// <summary>
-        /// Draws another card from possibly multiple decks included. If penetration rate was reached, then first shuffles all cards.
-        /// </summary>
-        /// <returns></returns>
         public CardType DrawNext()
         {
             _drawnCardsCounter++;

@@ -7,7 +7,7 @@ namespace Strategies.StrategyContexts.SilverFox
 {
     public class SilverFoxCardCounter : IDealCardCounter
     {
-        public int Count(Deal deal)
+        public double Count(Deal deal)
         {
             return deal.PlayerHand.Cards.Sum(c => c.SilverFoxCounter())
                    + deal.CroupierHand.Cards.Sum(c => c.SilverFoxCounter());

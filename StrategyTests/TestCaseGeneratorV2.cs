@@ -4,7 +4,6 @@ using Core.Models;
 using Strategies;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 
 namespace StrategyTests
 {
@@ -114,7 +113,6 @@ namespace StrategyTests
                     gamesCounter++;
                 }
                 currentDeal = currentGame.NewDeal();
-                Debug.WriteLine($"Started new deal ({dealsCounter}): " + currentDeal.Id.Value.Increment);
                 dealsCounter++;
                 currentBetCounter = countingStrategy.GetCounter(currentGame, currentDeal);
                 currentBetMultiplier = betMultiplierCalculator.Calculate(currentBetCounter).Value;

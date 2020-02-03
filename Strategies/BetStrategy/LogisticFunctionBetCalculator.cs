@@ -41,7 +41,7 @@ namespace Strategies.BetStrategy
             return new LogisticFunctionBetCalculator(A, L, K, X0);
         }
 
-        public string Equation => $"{L:F2} / (1 + e^(-{K:F2}(x-{X0:F2})))";
+        public string Equation => $"{L:F2} / ({A:F2} + e^(-{K:F2}(x-{X0:F2})))";
         public BetFunctionType Type => BetFunctionType.Logistic;
     }
 }

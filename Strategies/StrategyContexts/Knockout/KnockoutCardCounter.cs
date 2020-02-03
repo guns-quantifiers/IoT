@@ -7,7 +7,7 @@ namespace Strategies.StrategyContexts.Knockout
 {
     public class KnockoutCardCounter : IDealCardCounter
     {
-        public int Count(Deal deal)
+        public double Count(Deal deal)
         {
             return deal.PlayerHand.Cards.Sum(c => c.KnockoutCounter())
                    + deal.CroupierHand.Cards.Sum(c => c.KnockoutCounter());

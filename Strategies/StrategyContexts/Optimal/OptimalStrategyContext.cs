@@ -12,6 +12,6 @@ namespace Strategies.StrategyContexts.Optimal
 
         protected override double GetRunningCounter(Game game) => game.History
             .Where(d => d.IsEnded)
-            .Aggregate(0, (sum, nextDeal) => sum + CardCounter.Count(nextDeal));
+            .Aggregate(0d, (sum, nextDeal) => sum + CardCounter.Count(nextDeal));
     }
 }

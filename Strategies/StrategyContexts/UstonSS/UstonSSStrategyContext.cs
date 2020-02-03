@@ -12,6 +12,6 @@ namespace Strategies.StrategyContexts.UstonSS
 
         protected override double GetRunningCounter(Game game) => game.History
             .Where(d => d.IsEnded)
-            .Aggregate(-4 * DeckAmount, (sum, nextDeal) => sum + CardCounter.Count(nextDeal));
+            .Aggregate(-4d * DeckAmount, (sum, nextDeal) => sum + CardCounter.Count(nextDeal));
     }
 }

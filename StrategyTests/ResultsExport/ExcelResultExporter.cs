@@ -1,22 +1,26 @@
 ﻿using ClosedXML.Excel;
-using StrategyTests;
 using System;
 using System.Collections.Generic;
 using System.Data;
 using System.IO;
 using System.Linq;
 
-namespace TestCaseGeneratorConsole.ResultsExport
+namespace StrategyTests.ResultsExport
 {
-    internal class ExcelResultExporter
+    public class ExcelResultExporter
     {
-        private readonly string _directorPath;
+        private readonly string _directorPath = "";
         private readonly bool _shouldGenerateDecisionExcel;
 
         public ExcelResultExporter(string directoryPath, bool shouldGenerateDecisionExcel)
         {
             Directory.CreateDirectory(directoryPath);
             _directorPath = directoryPath;
+            _shouldGenerateDecisionExcel = shouldGenerateDecisionExcel;
+        }
+
+        public ExcelResultExporter(bool shouldGenerateDecisionExcel)
+        {
             _shouldGenerateDecisionExcel = shouldGenerateDecisionExcel;
         }
 
@@ -29,10 +33,20 @@ namespace TestCaseGeneratorConsole.ResultsExport
         public void SaveResultsToFile(List<PlayerDecision> decisionsHistory, TestCaseSettings settings)
         {
             GenerateWorkbookResults(decisionsHistory, settings)
-                .SaveAs(Path.Combine(_directorPath, GetSaveFileName($"Results_{DateTime.Now.ToLongTimeString()}.xlsx")));
+                .SaveAs(Path.Combine(_directorPath, GetSafeFileName()));
         }
 
-        public XLWorkbook GenerateWorkbookResults(List<PlayerDecision> decisionsHistory, TestCaseSettings settings)
+        public void SaveSummaryToFile(Summary summary, TestCaseSettings settings)
+        {
+            XLWorkbook workbook = new XLWorkbook();
+            var summaryWorksheet = workbook.Worksheets.Add(GenerateExcelSummary(summary, null, null), "Summary").SetTabColor(XLColor.Amber);
+            summaryWorksheet.ColumnWidth = 14;
+            var settingsWorksheet = workbook.Worksheets.Add(GetTableForSettings(settings), "Generation settings").SetTabColor(XLColor.Amethyst);
+            settingsWorksheet.ColumnWidth = 14;
+            workbook.SaveAs(Path.Combine(_directorPath, GetSafeFileName()));
+        }
+
+        private XLWorkbook GenerateWorkbookResults(List<PlayerDecision> decisionsHistory, TestCaseSettings settings)
         {
             XLWorkbook workbook = new XLWorkbook();
             double? maxResult = null, minResult = null;
@@ -41,7 +55,7 @@ namespace TestCaseGeneratorConsole.ResultsExport
                 var decisionsWorksheet = workbook.Worksheets.Add(GenerateTableForDecisions(decisionsHistory, out maxResult, out minResult), "Decisions").SetTabColor(XLColor.ArmyGreen);
                 decisionsWorksheet.ColumnWidth = 14;
             }
-            var summaryWorksheet = workbook.Worksheets.Add(GenerateExcelSummary(decisionsHistory, maxResult, minResult), "Summary").SetTabColor(XLColor.Amber);
+            var summaryWorksheet = workbook.Worksheets.Add(GenerateExcelSummary(new Summary(decisionsHistory), maxResult, minResult), "Summary").SetTabColor(XLColor.Amber);
             summaryWorksheet.ColumnWidth = 14;
             var settingsWorksheet = workbook.Worksheets.Add(GetTableForSettings(settings), "Generation settings").SetTabColor(XLColor.Amethyst);
             settingsWorksheet.ColumnWidth = 14;
@@ -64,10 +78,10 @@ namespace TestCaseGeneratorConsole.ResultsExport
                 moneyResult += decisionsHistory[i].Value;
                 table.Rows.Add(
                     decisionsHistory[i].Type,
-                    decisionsHistory[i].Value,
+                    decisionsHistory[i].Value.ToString("F2"),
                     decisionsHistory[i].Counter.ToString("F2"),
                     decisionsHistory[i].BetMultiplier.ToString("F2"),
-                    moneyResult
+                    moneyResult.ToString("F2")
                 );
                 if (maxResult < moneyResult)
                 {
@@ -81,9 +95,8 @@ namespace TestCaseGeneratorConsole.ResultsExport
             return table;
         }
 
-        private DataTable GenerateExcelSummary(List<PlayerDecision> decisionsHistory, double? maxResult, double? minResult)
+        private DataTable GenerateExcelSummary(Summary summary, double? maxResult, double? minResult)
         {
-            Summary summary = new Summary(decisionsHistory);
             DataTable table = new DataTable();
             table.Columns.Add("Deals played");
             table.Columns.Add("Final money result");
@@ -110,8 +123,8 @@ namespace TestCaseGeneratorConsole.ResultsExport
                 table.Columns.Add("Maximum running money result");
                 table.Columns.Add("Minimum running money result");
 
-                rowValues.Add(maxResult);
-                rowValues.Add(minResult);
+                rowValues.Add(maxResult.Value.ToString("F2"));
+                rowValues.Add(minResult.Value.ToString("F2"));
             }
 
             table.Rows.Add(rowValues.ToArray());
@@ -144,15 +157,41 @@ namespace TestCaseGeneratorConsole.ResultsExport
             return table;
         }
 
-        private string GetSaveFileName(string fileName) =>
+        public string GetSafeFileName() =>
             Path.GetInvalidFileNameChars().Aggregate(
-                fileName,
+                $"Results_{DateTime.Now.ToLongTimeString()}.xlsx",
                 (file, invalidChar) => file.Replace(invalidChar, '_'));
     }
 
-    internal class Summary
+    public class Summary
     {
         public Summary(List<PlayerDecision> decisionsHistory)
+        {
+            InitializeProperties(decisionsHistory);
+        }
+
+        public Summary(List<PlayerDecision> decisionsHistory, Summary summaryToMerge)
+        {
+            InitializeProperties(decisionsHistory);
+            NumberOfDeals += summaryToMerge.NumberOfDeals;
+            MoneyResult += summaryToMerge.MoneyResult;
+            if (MaxCounter < summaryToMerge.MaxCounter)
+            {
+                MaxCounter = summaryToMerge.MaxCounter;
+                BetForMaxCounter = summaryToMerge.BetForMaxCounter;
+            }
+
+            if (MinCounter > summaryToMerge.MinCounter)
+            {
+                MinCounter = summaryToMerge.MinCounter;
+                BetForMinCounter = summaryToMerge.BetForMinCounter;
+            }
+
+            BiggestWin = Math.Max(BiggestWin, summaryToMerge.BiggestWin);
+            BiggestLoss = Math.Max(BiggestLoss, summaryToMerge.BiggestLoss);
+        }
+
+        private void InitializeProperties(List<PlayerDecision> decisionsHistory)
         {
             NumberOfDeals = decisionsHistory.Select(d => d.GameSnapshot.History.Last()).GroupBy(d => d.Id.Value.Increment).Count();
             MoneyResult = decisionsHistory.Sum(d => d.Value);
@@ -164,13 +203,13 @@ namespace TestCaseGeneratorConsole.ResultsExport
             BiggestLoss = decisionsHistory.Min(d => d.Value);
         }
 
-        public int NumberOfDeals { get; }
-        public double MoneyResult { get; }
-        public double MaxCounter { get; }
-        public double MinCounter { get; }
-        public double BetForMaxCounter { get; }
-        public double BetForMinCounter { get; }
-        public double BiggestWin { get; }
-        public double BiggestLoss { get; }
+        public int NumberOfDeals { get; private set; }
+        public double MoneyResult { get; private set; }
+        public double MaxCounter { get; private set; }
+        public double MinCounter { get; private set; }
+        public double BetForMaxCounter { get; private set; }
+        public double BetForMinCounter { get; private set; }
+        public double BiggestWin { get; private set; }
+        public double BiggestLoss { get; private set; }
     }
 }

@@ -4,6 +4,6 @@ namespace Core.Components
 {
     public interface IDealCardCounter
     {
-        int Count(Deal deal);
+        double Count(Deal deal);
     }
 }

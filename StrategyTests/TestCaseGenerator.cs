@@ -153,6 +153,19 @@ namespace StrategyTests
             Seed = seed;
         }
 
+        public TestCaseSettings(TestCaseSettings settings, int gamesToGenerate)
+        {
+            NumberOfDecks = settings.NumberOfDecks;
+            CountingStrategyModel = settings.CountingStrategyModel;
+            MinimumBet = settings.MinimumBet;
+            MaximumBet = settings.MaximumBet;
+            BasicBet = settings.BasicBet;
+            DeckPenetration = settings.DeckPenetration;
+            GamesToGenerate = gamesToGenerate;
+            CalculatorConfiguration = settings.CalculatorConfiguration;
+            Seed = settings.Seed;
+        }
+
         public int GamesToGenerate { get; }
         public int Seed { get; }
         public ICalculatorConfiguration CalculatorConfiguration { get; }

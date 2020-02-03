@@ -7,7 +7,7 @@ namespace Strategies.StrategyContexts.UstonSS
 {
     public class UstonSSCardCounter : IDealCardCounter
     {
-        public int Count(Deal deal)
+        public double Count(Deal deal)
         {
             return deal.PlayerHand.Cards.Sum(c => c.UstonCounter())
                    + deal.CroupierHand.Cards.Sum(c => c.UstonCounter());

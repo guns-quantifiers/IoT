@@ -8,8 +8,10 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Strategies;
 using StrategyTests;
+using StrategyTests.ResultsExport;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 
 namespace BlackjackAPI.Controllers
@@ -172,7 +174,7 @@ namespace BlackjackAPI.Controllers
                 throw new ArgumentException("You need to specify all parameters for games auto generation.");
             }
 
-            List<PlayerDecision> generationResults = new TestCaseGeneratorV2().Generate(new TestCaseSettings(
+            var settings = new TestCaseSettings(
                 parameters.NumberOfDecks,
                 parameters.CountingStrategy,
                 parameters.MinimumBet,
@@ -181,9 +183,19 @@ namespace BlackjackAPI.Controllers
                 parameters.DeckPenetration,
                 parameters.GamesToGenerate,
                 parameters.BetStrategy.TryBindCalculatorConfiguration(),
-                parameters.Seed));
+                parameters.Seed);
+            List<PlayerDecision> generationResults = new TestCaseGeneratorV2().Generate(settings);
 
-
+            var excelExporter = new ExcelResultExporter(true);
+            MemoryStream stream = new MemoryStream();
+            excelExporter.SaveResultsToStream(generationResults, settings, stream);
+            var mimeType = "application/octet-stream";
+            stream.Flush();
+            stream.Seek(0, SeekOrigin.Begin);
+            return new FileStreamResult(stream, mimeType)
+            {
+                FileDownloadName = excelExporter.GetSafeFileName()
+            };
         }
 
         public class FileGenerateParameters
